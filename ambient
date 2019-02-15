@@ -26,7 +26,7 @@ class AmbientSounds():
     play_duration = 300
 
     # Number of ticks (seconds) for a fade
-    fade_duration = 60 
+    fade_duration = 60
     fade_ms = fade_duration*1000
 
     # Countdown timer for playing sound
@@ -44,8 +44,7 @@ class AmbientSounds():
         self.files = self.load_sound_files()
 
         # Prepopulate isplaying array
-        for s in self.files:
-            self.isplaying.append(False)
+        self.isplaying = [False] * len(self.files)
 
     def start(self):
         if len(self.files) == 0:

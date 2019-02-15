@@ -20,12 +20,12 @@ from time import sleep
 class AmbientSounds():
     """AmbientSounds class"""
 
-    version = "1.0.4"
+    version = "1.0.5"
 
     # How long each sound should play (by itself)
     play_duration = 300
 
-    # Number of ticks (seconds) for a fade
+    # Number of ambient ticks (seconds) for a fade
     fade_duration = 60
     fade_ms = fade_duration*1000
 
@@ -37,6 +37,9 @@ class AmbientSounds():
     sounds = []
     isplaying = []
     current_sound = 0
+
+    # FPS
+    fps = 10
 
     def __init__(self):
         print("Ambience version", self.version)
@@ -89,13 +92,23 @@ class AmbientSounds():
 
         return next_sound
 
-    def play_sound(self, index):
-        self.sounds[index].play(-1, fade_ms=self.fade_ms)
-        self.isplaying[index] = True
-        self.play_timer = self.play_duration - (self.fade_duration / 2)
+    def next(self):
+        self.load_sound(self.get_next_sound())
+        self.stop_sound(self.current_sound, 2)
+        self.current_sound = self.get_next_sound()
+        self.play_sound(self.current_sound, 2)
 
-    def stop_sound(self, index):
-        self.sounds[index].fadeout(self.fade_ms)
+    def play_sound(self, index, fade_override=None):
+        fade_duration, fade_ms = self._get_fade_duration(fade_override)
+
+        self.sounds[index].play(-1, fade_ms=fade_ms)
+        self.isplaying[index] = True
+        self.play_timer = self.play_duration - (fade_duration / 2)
+
+    def stop_sound(self, index, fade_override=None):
+        fade_duration, fade_ms = self._get_fade_duration(fade_override)
+
+        self.sounds[index].fadeout(fade_ms)
         self.isplaying[index] = False
 
     def end_fadeout(self):
@@ -104,6 +117,11 @@ class AmbientSounds():
         self.sounds[self.current_sound].fadeout(3000)
         sleep(3)
         print("Goodbye.")
+
+    def _get_fade_duration(self, fade_override=None):
+        fade_duration = fade_override if fade_override else self.fade_duration
+        fade_ms = fade_duration*1000
+        return (fade_duration, fade_ms)
 
     def get_files(self, path):
         files = []
@@ -143,15 +161,31 @@ def main():
     ambience = AmbientSounds()
     ambience.start()
 
+    clock = pygame.time.Clock()
+
+    def event_loop():
+        for event in pygame.event.get():
+            if event.type == USEREVENT + 1:
+                ambience.tick()
+            if event.type == pygame.KEYDOWN:
+                # Keyboard input only works when pygame window has focus
+                if event.key==K_n:
+                    ambience.next()
+                elif event.key==K_q:
+                    the_end()
+
+        clock.tick(ambience.fps)
+
+    def the_end():
+        ambience.end_fadeout()
+        pygame.quit()
+        sys.exit(0)
+
     # Event loop
     while True:
         try:
-            for event in pygame.event.get():
-                if event.type == USEREVENT + 1:
-                    ambience.tick()
+            event_loop()
         except KeyboardInterrupt:
-            ambience.end_fadeout()
-            pygame.quit()
-            sys.exit(0)
+            the_end()
 
 if __name__ == '__main__': main()

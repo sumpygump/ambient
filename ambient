@@ -50,9 +50,11 @@ class AmbientSounds():
     # Don't really need pygame's cycle running so frequently
     fps = 2
 
-    def __init__(self, path=None):
+    def __init__(self, path=None, duration=5):
         if path:
             self.path = path
+
+        self.play_duration = int(duration) * 120;
 
         print("\n{}".format(AmbientSounds.get_version()))
 
@@ -156,7 +158,8 @@ class AmbientSounds():
                 if os.path.isdir(full): files.extend(self.get_files(full)) # recurse
                 if len(files) > 64: break # break if we have enough
                 if fnmatch.fnmatch(f, '*.ogg'): files.append(full)
-                if fnmatch.fnmatch(f, '*.mp3'): files.append(full)
+                #if fnmatch.fnmatch(f, '*.mp3'): files.append(full)
+                if fnmatch.fnmatch(f, '*.wav'): files.append(full)
                 if fnmatch.fnmatch(f, '*.flac'): files.append(full)
         except FileNotFoundError:
             print("Path '{}' not found".format(path))
@@ -188,6 +191,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--version', action='store_true', help="show version and exit")
     parser.add_argument('-p', '--path', default=None, help="set the path where the sound files are")
+    parser.add_argument('-d', '--duration', default=5, help="set the duration in minutes each sound will play: default=5")
     (args, remaining_args) = parser.parse_known_args(sys.argv)
 
     # Display version and exit
@@ -207,7 +211,7 @@ def main():
         sounds_path = os.path.abspath(args.path)
 
     # Initialize AmbientSounds
-    ambience = AmbientSounds(sounds_path)
+    ambience = AmbientSounds(path=sounds_path, duration=args.duration)
     ambience.start()
 
     def event_loop():

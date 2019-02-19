@@ -10,11 +10,15 @@
 #-----------------------------------------------------#
 
 import argparse
+import fcntl
 import fnmatch
 import os
 import pygame
 import random
 import sys
+import termios
+import time
+import tty
 
 from pygame.locals import *
 from pprint import pprint
@@ -49,7 +53,10 @@ class AmbientSounds():
     path = os.path.join(package_path, "sounds")
     files = []
 
-    def __init__(self, path=None, duration=5):
+    # Whether to listen to stdin in cli (experimental
+    noinput = False
+
+    def __init__(self, path=None, duration=5, noinput=False):
         if path:
             self.path = path
 
@@ -62,10 +69,10 @@ class AmbientSounds():
             self.fade_ms = int(self.fade_duration * (1000.0 / self.fps))
 
         print("\n{}".format(AmbientSounds.get_version()))
-        print("duration: {}, fade: {}".format(self.play_duration, self.fade_duration))
-        print("fade_ms: {}".format(self.fade_ms))
 
         self.files = self.load_sound_files()
+
+        self.noinput = bool(noinput)
 
     def get_version():
         return "Ambient version {}".format(AmbientSounds.version)
@@ -191,12 +198,71 @@ class AmbientSounds():
         except IndexError:
             self.sounds.append(pygame.mixer.Sound(self.files[file_index]))
 
+    def event_loop(self):
+        while True:
+            try:
+                if self.noinput:
+                    char = False
+                else:
+                    char = sys.stdin.read(1)
+                self.handle_events(char)
+            except KeyboardInterrupt:
+                self.the_end()
+
+    def handle_events(self, char_input=False):
+        for event in pygame.event.get():
+            if event.type == USEREVENT + 1:
+                self.tick()
+            if event.type == pygame.KEYUP:
+                # Keyboard in pygame window (macos)
+                self.handle_input(event.key)
+        if char_input:
+            # Stdin in cli
+            self.handle_input(ord(char_input))
+
+        pygame.time.Clock().tick(self.fps)
+
+    def handle_input(self, key_code):
+        print(chr(key_code), end="")
+        if key_code == K_n:
+            self.next()
+        elif key_code == K_q:
+            self.the_end()
+
+    def the_end(self):
+        self.end_fadeout()
+        pygame.quit()
+        print("\033[?25h") # Show cursor
+        sys.exit(0)
+
+class StdinReader():
+    class raw(object):
+        def __init__(self, stream):
+            self.stream = stream
+            self.fd = self.stream.fileno()
+        def __enter__(self):
+            self.original_stty = termios.tcgetattr(self.stream)
+            tty.setcbreak(self.stream)
+        def __exit__(self, type, value, traceback):
+            termios.tcsetattr(self.stream, termios.TCSANOW, self.original_stty)
+
+    class nonblocking(object):
+        def __init__(self, stream):
+            self.stream = stream
+            self.fd = self.stream.fileno()
+        def __enter__(self):
+            self.orig_fl = fcntl.fcntl(self.fd, fcntl.F_GETFL)
+            fcntl.fcntl(self.fd, fcntl.F_SETFL, self.orig_fl | os.O_NONBLOCK)
+        def __exit__(self, *args):
+            fcntl.fcntl(self.fd, fcntl.F_SETFL, self.orig_fl)
+
 def main():
     # Handle command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', '--version', action='store_true', help="show version and exit")
     parser.add_argument('-p', '--path', default=None, help="set the path where the sound files are")
     parser.add_argument('-d', '--duration', default=5, help="set the duration in minutes each sound will play: default=5")
+    parser.add_argument('-n', '--noinput', action='store_true', help="disable the stdin input capture")
     (args, remaining_args) = parser.parse_known_args(sys.argv)
 
     # Display version and exit
@@ -213,37 +279,20 @@ def main():
     pygame.init()
 
     # Initialize AmbientSounds
-    ambience = AmbientSounds(path=sounds_path, duration=args.duration)
+    ambience = AmbientSounds(path=sounds_path, duration=args.duration, noinput=args.noinput)
     ambience.start()
 
     # This creates a timer event for the "tick" that will be passed to the
     # ambience class object. It is measured in milliseconds (1000 = 1 second)
     pygame.time.set_timer(USEREVENT + 1, int(1000 / ambience.fps))
 
-    def event_loop():
-        for event in pygame.event.get():
-            if event.type == USEREVENT + 1:
-                ambience.tick()
-            if event.type == pygame.KEYUP:
-                # Keyboard input only works when pygame window has focus
-                if event.key==K_n:
-                    ambience.next()
-                elif event.key==K_q:
-                    the_end()
-
-        pygame.time.Clock().tick(ambience.fps)
-
-    def the_end():
-        ambience.end_fadeout()
-        pygame.quit()
-        print("\033[?25h") # Show cursor
-        sys.exit(0)
-
     # Event loop
-    while True:
-        try:
-            event_loop()
-        except KeyboardInterrupt:
-            the_end()
+    if ambience.noinput:
+        print('no input')
+        ambience.event_loop()
+    else:
+        with StdinReader.raw(sys.stdin):
+            with StdinReader.nonblocking(sys.stdin):
+                ambience.event_loop()
 
 if __name__ == '__main__': main()

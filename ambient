@@ -17,18 +17,22 @@ import random
 import sys
 
 from pygame.locals import *
-from time import sleep
+from pprint import pprint
 
 class AmbientSounds():
     """AmbientSounds class"""
 
-    version = "1.0.6"
+    version = "1.0.7"
+
+    # FPS: Low number is used to reduce CPU;
+    # Don't really need pygame's cycle running so frequently
+    fps = 2
 
     # How long each sound should play (by itself)
     play_duration = 600
 
     # Number of ambient ticks (half seconds) for a fade
-    fade_duration = 60
+    fade_duration = 120
     fade_ms = fade_duration * 1000
 
     # Countdown timer for playing sound
@@ -36,7 +40,6 @@ class AmbientSounds():
 
     # Storage of sound objects
     sounds = []
-    isplaying = []
     current_sound = 0
     animate_chars = "◐◓◑◒"
     animate_position = 0
@@ -46,22 +49,23 @@ class AmbientSounds():
     path = os.path.join(package_path, "sounds")
     files = []
 
-    # FPS: Low number is used to reduce CPU;
-    # Don't really need pygame's cycle running so frequently
-    fps = 2
-
     def __init__(self, path=None, duration=5):
         if path:
             self.path = path
 
-        self.play_duration = int(duration) * 120;
+        # Calculate number of half seconds from minutes
+        self.play_duration = float(duration) * (self.fps * 60);
+
+        # If the duration is shorter than the standard fade, make a new fade duration
+        if (self.play_duration <= self.fps * 60):
+            self.fade_duration = float(self.play_duration / 5.0) # 5% of sound duration
+            self.fade_ms = int(self.fade_duration * (1000.0 / self.fps))
 
         print("\n{}".format(AmbientSounds.get_version()))
+        print("duration: {}, fade: {}".format(self.play_duration, self.fade_duration))
+        print("fade_ms: {}".format(self.fade_ms))
 
         self.files = self.load_sound_files()
-
-        # Prepopulate isplaying array
-        self.isplaying = [False] * len(self.files)
 
     def get_version():
         return "Ambient version {}".format(AmbientSounds.version)
@@ -80,8 +84,7 @@ class AmbientSounds():
 
         # Start first sound
         self.sounds[self.current_sound].play(-1, fade_ms=3000)
-        self.isplaying[self.current_sound] = True
-        self.play_timer = self.play_duration - (self.fade_duration / 2)
+        self.play_timer = int(self.play_duration - (self.fade_duration / 2) - (3 * self.fps))
 
     def tick(self):
         self.handle_play()
@@ -93,13 +96,13 @@ class AmbientSounds():
             self.animate_position = 0
         animate_char = self.animate_chars[self.animate_position]
         sound_name = os.path.basename(self.files[self.current_sound])
-        print("\r\033[K▶  Playing {} {}  ".format(sound_name, animate_char), end="")
+        print("\r\033[K▶  Playing {} {} ".format(sound_name, animate_char), end="")
 
     def handle_play(self):
         if self.play_timer > 0:
             self.play_timer = self.play_timer - 1
-            if self.play_timer == 10:
-                # Load the next sound 10 ticks before we need to switch
+            if self.play_timer == min(10, int(self.play_duration / 2)):
+                # Load the next sound a few ticks before we need to play it
                 self.load_sound(self.get_next_sound())
         else:
             self.stop_sound(self.current_sound)
@@ -127,26 +130,28 @@ class AmbientSounds():
     def play_sound(self, index, fade_override=None):
         fade_duration, fade_ms = self._get_fade_duration(fade_override)
 
-        self.sounds[index].play(-1, fade_ms=fade_ms)
-        self.isplaying[index] = True
-        self.play_timer = self.play_duration - (fade_duration / 2)
+        try:
+            self.sounds[index].play(-1, fade_ms=fade_ms)
+        except IndexError:
+            self.load_sound(index)
+
+        self.play_timer = int(self.play_duration - (fade_duration / 2))
 
     def stop_sound(self, index, fade_override=None):
         fade_duration, fade_ms = self._get_fade_duration(fade_override)
 
         self.sounds[index].fadeout(fade_ms)
-        self.isplaying[index] = False
 
-    def end_fadeout(self):
+    def end_fadeout(self, duration = 4000):
         print()
         print("Stopping sounds...")
-        self.sounds[self.current_sound].fadeout(3000)
-        sleep(3)
+        pygame.mixer.fadeout(duration)
+        pygame.time.wait(duration)
         print("Goodbye.")
 
     def _get_fade_duration(self, fade_override=None):
         fade_duration = fade_override if fade_override else self.fade_duration
-        fade_ms = fade_duration*1000
+        fade_ms = int(fade_duration * (1000.0 / self.fps))
         return (fade_duration, fade_ms)
 
     def get_files(self, path):
@@ -199,20 +204,21 @@ def main():
         print(AmbientSounds.get_version())
         sys.exit(0)
 
-    # Initialize pygame
-    pygame.init()
-
-    # This creates a timer event for the "tick" that will be passed to the
-    # ambience class object. It is measured in milliseconds (1000 = 1 second)
-    pygame.time.set_timer(USEREVENT + 1, 500)
-
+    # Determine path to sounds
     sounds_path = None
     if args.path:
         sounds_path = os.path.abspath(args.path)
 
+    # Initialize pygame
+    pygame.init()
+
     # Initialize AmbientSounds
     ambience = AmbientSounds(path=sounds_path, duration=args.duration)
     ambience.start()
+
+    # This creates a timer event for the "tick" that will be passed to the
+    # ambience class object. It is measured in milliseconds (1000 = 1 second)
+    pygame.time.set_timer(USEREVENT + 1, int(1000 / ambience.fps))
 
     def event_loop():
         for event in pygame.event.get():

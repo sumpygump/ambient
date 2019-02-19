@@ -83,7 +83,9 @@ class AmbientSounds():
             pygame.quit()
             sys.exit(1)
 
-        print("Playing sounds. Press Ctrl-C to exit.")
+        print("\nPlaying sounds. Press Ctrl-C to exit.")
+        if not self.noinput:
+            print("Press 'n' to go to next sound. Press 'q' to quit.")
         print("\033[?25l") # Hide cursor
 
         # Load the first sound
@@ -288,7 +290,6 @@ def main():
 
     # Event loop
     if ambience.noinput:
-        print('no input')
         ambience.event_loop()
     else:
         with StdinReader.raw(sys.stdin):

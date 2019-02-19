@@ -26,7 +26,7 @@ from pprint import pprint
 class AmbientSounds():
     """AmbientSounds class"""
 
-    version = "1.0.7"
+    version = "1.0.8"
 
     # FPS: Low number is used to reduce CPU;
     # Don't really need pygame's cycle running so frequently
@@ -83,10 +83,11 @@ class AmbientSounds():
             pygame.quit()
             sys.exit(1)
 
-        print("\nPlaying sounds. Press Ctrl-C to exit.")
+        print("\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
         if not self.noinput:
-            print("Press 'n' to go to next sound. Press 'q' to quit.")
-        print("\033[?25l") # Hide cursor
+            print("Press 'n' to go to next sound. Press 'q' to quit.", flush=True)
+        if sys.stdout.isatty():
+            print("\033[?25l") # Hide cursor
 
         # Load the first sound
         self.load_sound(self.current_sound)
@@ -97,14 +98,17 @@ class AmbientSounds():
 
     def tick(self):
         self.handle_play()
-        self.print_current_sound()
+        if sys.stdout.isatty():
+            self.print_current_sound()
 
     def print_current_sound(self):
         self.animate_position += 1
         if self.animate_position >= len(self.animate_chars):
             self.animate_position = 0
+
         animate_char = self.animate_chars[self.animate_position]
         sound_name = os.path.basename(self.files[self.current_sound])
+
         print("\r\033[K▶  Playing {} {} ".format(sound_name, animate_char), end="")
 
     def handle_play(self):
@@ -153,10 +157,10 @@ class AmbientSounds():
 
     def end_fadeout(self, duration = 4000):
         print()
-        print("Stopping sounds...")
+        print("Stopping sounds...", flush=True)
         pygame.mixer.fadeout(duration)
         pygame.time.wait(duration)
-        print("Goodbye.")
+        print("Goodbye.", flush=True)
 
     def _get_fade_duration(self, fade_override=None):
         fade_duration = fade_override if fade_override else self.fade_duration
@@ -191,7 +195,9 @@ class AmbientSounds():
 
         print("Loaded sounds:")
         for index,file in enumerate(files):
-            print("{}. {}".format(index + 1, file))
+            # Clean up common ancestors in sound file paths
+            listed_sound = file.replace(self.path + os.sep, '')
+            print("{}. {}".format(index + 1, listed_sound))
         return files
 
     def load_sound(self, file_index):
@@ -232,10 +238,16 @@ class AmbientSounds():
             self.the_end()
 
     def the_end(self):
-        self.end_fadeout()
-        pygame.quit()
-        print("\033[?25h") # Show cursor
+        try:
+            self.end_fadeout()
+            pygame.quit()
+            if sys.stdout.isatty():
+                print("\033[?25h") # Show cursor
+            sys.exit(0)
+        except BrokenPipeError:
+            print("Exiting", file=sys.stderr)
         sys.exit(0)
+        sys.stderr.close()
 
 class StdinReader():
     class raw(object):

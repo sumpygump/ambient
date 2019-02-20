@@ -24,7 +24,7 @@ To install pygame from scratch instead of using pip, you can use the following
 commands (assuming linux):
 
 ```
-# Clone source repo
+ # Clone source repo
 sudo apt install mercurial
 hg clone https://bitbucket.org/pygame/pygame
 cd pygame
@@ -65,6 +65,7 @@ Credit goes to the following for the sound files included in this package:
 - Vann Westfold for [`ambienttraut.ogg`](https://freesound.org/people/Vann%20Westfold/sounds/34308/)
 - Ero Kia for [`ambient-wave-17.ogg`](https://freesound.org/people/deleted_user_2731495/sounds/395837/)
 - Sclolex for [`cave.ogg` (Water Dripping in a Large Cave)](https://freesound.org/people/Sclolex/sounds/177958/)
+- musicbrain for [`didgeridu-monk.ogg`](https://freesound.org/people/musicbrain/sounds/376577/)
 - Ero Kia for [`elementary-wave-11.ogg`](https://freesound.org/people/deleted_user_2731495/sounds/183881/)
 - Blair Ferrier for [`helicopter-mix.ogg`](https://freesound.org/people/nofeedbak/sounds/41171/)
 - Chris Zabriskie for [`long-hallway.ogg` (excerpt from "I Am Running Down the Long Hallway of Viewmont Elementary)](http://freemusicarchive.org/music/Chris_Zabriskie/I_Am_a_Man_Who_Will_Fight_for_Your_Honor/I_Am_Running_Down_the_Long_Hallway_of_Viewmont_Elementary") Creative Commons 3.0
@@ -73,3 +74,4 @@ Credit goes to the following for the sound files included in this package:
 - Luftrum for [`ocean-waves.ogg`](https://freesound.org/people/Luftrum/sounds/48412/)
 - chzmn for [`perfect-storm.ogg`](https://weather.ambient-mixer.com/the-perfect-storm)
 - Hargisss Sound for [`spring-birds.ogg`](https://freesound.org/people/hargissssound/sounds/345851/)
+- Trekcore.com for [`tng-bridge-1.ogg`](http://www.trekcore.com/audio/)

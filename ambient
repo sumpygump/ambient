@@ -56,6 +56,10 @@ class AmbientSounds():
     # Whether to listen to stdin in cli (experimental
     noinput = False
 
+    # Volume
+    volume = 1.0
+    muted = False
+
     def __init__(self, path=None, duration=5, noinput=False):
         if path:
             self.path = path
@@ -85,6 +89,7 @@ class AmbientSounds():
 
         print("\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
         if not self.noinput:
+            print("Press '[' and ']' to change volume and press 'm' to mute.")
             print("Press 'n' to go to next sound. Press 'q' to quit.", flush=True)
         if sys.stdout.isatty():
             print("\033[?25l") # Hide cursor
@@ -109,7 +114,13 @@ class AmbientSounds():
         animate_char = self.animate_chars[self.animate_position]
         sound_name = os.path.basename(self.files[self.current_sound])
 
-        print("\r\033[K▶  Playing {} {} ".format(sound_name, animate_char), end="")
+        volume_str = ""
+        if self.volume < 1.0:
+            volume_str = " vol: {}%".format(int(self.volume * 100))
+        if self.muted:
+            volume_str = " [mute]"
+
+        print("\r\033[K▶  Playing {} {} {} ".format(sound_name, animate_char, volume_str), end="")
 
     def handle_play(self):
         if self.play_timer > 0:
@@ -166,6 +177,29 @@ class AmbientSounds():
         fade_duration = fade_override if fade_override else self.fade_duration
         fade_ms = int(fade_duration * (1000.0 / self.fps))
         return (fade_duration, fade_ms)
+
+    def decrease_volume(self):
+        self.volume = self.volume - 0.05
+        if self.volume < 0.0:
+            self.volume = 0.0
+        self.set_volume(self.volume)
+
+    def increase_volume(self):
+        self.volume = self.volume + 0.05
+        if self.volume > 1.0:
+            self.volume = 1.0
+        self.set_volume(self.volume)
+
+    def set_volume(self, level):
+        for i in range(pygame.mixer.get_num_channels()):
+            pygame.mixer.Channel(i).set_volume(level)
+
+    def mute(self):
+        self.muted = not self.muted
+        if self.muted:
+            self.set_volume(0.0)
+        else:
+            self.set_volume(self.volume)
 
     def get_files(self, path):
         files = []
@@ -236,6 +270,12 @@ class AmbientSounds():
             self.next()
         elif key_code == K_q:
             self.the_end()
+        elif key_code == K_LEFTBRACKET:
+            self.decrease_volume()
+        elif key_code == K_RIGHTBRACKET:
+            self.increase_volume()
+        elif key_code == K_m:
+            self.mute()
 
     def the_end(self):
         try:

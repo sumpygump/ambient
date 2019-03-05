@@ -65,6 +65,7 @@ Credit goes to the following for the sound files included in this package:
 - Vann Westfold for [`ambienttraut.ogg`](https://freesound.org/people/Vann%20Westfold/sounds/34308/)
 - Ero Kia for [`ambient-wave-17.ogg`](https://freesound.org/people/deleted_user_2731495/sounds/395837/)
 - Mynoise.net for [`b25-bomber.ogg`](https://mynoise.net/NoiseMachines/propellerNoiseGenerator.php?l=32353333252532141414&m=&d=0)
+- Mynoise.net for [`binaural-low-complex.ogg`](https://mynoise.net/NoiseMachines/binauralBrainwaveGenerator.php?l=61565146413633292522&m=&d=0)
 - Sclolex for [`cave.ogg` (Water Dripping in a Large Cave)](https://freesound.org/people/Sclolex/sounds/177958/)
 - Daniel Simion for [`crackling-fireplace`](http://soundbible.com/2178-Crackling-Fireplace.html)
 - musicbrain for [`didgeridu-monk.ogg`](https://freesound.org/people/musicbrain/sounds/376577/)

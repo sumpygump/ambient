@@ -90,7 +90,7 @@ class AmbientSounds():
         print("\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
         if not self.noinput:
             print("Press '[' and ']' to change volume and press 'm' to mute.")
-            print("Press 'n' to go to next sound. Press 'q' to quit.", flush=True)
+            print("Press 'n' to go to next sound, or 'p' to go to previous sound. Press 'q' to quit.", flush=True)
         if sys.stdout.isatty():
             print("\033[?25l") # Hide cursor
 

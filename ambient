@@ -330,7 +330,6 @@ def main():
         sounds_path = os.path.abspath(args.path)
 
     # Initialize pygame
-    pygame.mixer.pre_init(44100, 16, 2, 4096) #frequency, size, channels, buffersize
     pygame.init()
 
     # Initialize AmbientSounds

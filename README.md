@@ -40,7 +40,10 @@ sudo python3 setup.py install
 To run with the default settings, simply run `ambient`. Use "ctrl-c" to stop.
 
 ```
-usage: ambient [-h] [-v] [-p PATH] [-d DURATION] [-n]
+usage: ambient [-h] [-v] [-p PATH] [-d DURATION] [-n] [paths [paths ...]]
+
+positional arguments:
+  paths                 load given sound file(s) or path(s)
 
 optional arguments:
   -h, --help            show this help message and exit

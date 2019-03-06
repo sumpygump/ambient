@@ -11,7 +11,7 @@
 
 import argparse
 import fcntl
-import fnmatch
+from fnmatch import fnmatch
 import os
 import pygame
 import random
@@ -26,7 +26,7 @@ from pprint import pprint
 class AmbientSounds():
     """AmbientSounds class"""
 
-    version = "1.0.8"
+    version = "1.0.9"
 
     # FPS: Low number is used to reduce CPU;
     # Don't really need pygame's cycle running so frequently
@@ -50,7 +50,7 @@ class AmbientSounds():
 
     # Path and sound files
     package_path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(package_path, "sounds")
+    paths = [os.path.join(package_path, "sounds")]
     files = []
 
     # Whether to listen to stdin in cli (experimental
@@ -60,9 +60,9 @@ class AmbientSounds():
     volume = 1.0
     muted = False
 
-    def __init__(self, path=None, duration=5, noinput=False):
-        if path:
-            self.path = path
+    def __init__(self, paths=None, duration=5, noinput=False):
+        if paths:
+            self.paths = paths
 
         # Calculate number of half seconds from minutes
         self.play_duration = float(duration) * (self.fps * 60);
@@ -72,7 +72,7 @@ class AmbientSounds():
             self.fade_duration = float(self.play_duration / 5.0) # 5% of sound duration
             self.fade_ms = int(self.fade_duration * (1000.0 / self.fps))
 
-        print("\n{}".format(AmbientSounds.get_version()))
+        print(AmbientSounds.get_version())
 
         self.files = self.load_sound_files()
 
@@ -201,27 +201,50 @@ class AmbientSounds():
         else:
             self.set_volume(self.volume)
 
-    def get_files(self, path):
+    def load_sound(self, file_index):
+        try:
+            sound = self.sounds[file_index]
+        except IndexError:
+            self.sounds.append(pygame.mixer.Sound(self.files[file_index]))
+
+    def get_files(self, paths):
         files = []
 
-        try:
-            for f in os.listdir(path):
-                full = os.path.join(path, f)
-                if os.path.isdir(full): files.extend(self.get_files(full)) # recurse
-                if len(files) > 64: break # break if we have enough
-                if fnmatch.fnmatch(f, '*.ogg'): files.append(full)
-                #if fnmatch.fnmatch(f, '*.mp3'): files.append(full)
-                if fnmatch.fnmatch(f, '*.wav'): files.append(full)
-                if fnmatch.fnmatch(f, '*.flac'): files.append(full)
-        except FileNotFoundError:
-            print("Path '{}' not found".format(path))
+        for path in paths:
+            try:
+                if os.path.isdir(path):
+                    files.extend(self.get_files_from_path(path))
+                else:
+                    self.add_valid_file(path, files)
+            except FileNotFoundError:
+                print("Path '{}' not found".format(path))
+
+        if len(files) == 0:
+            print("No sound files to load!")
             sys.exit(1)
 
         return files
 
+    def get_files_from_path(self, path):
+        files = []
+        for f in os.listdir(path):
+            full = os.path.join(path, f)
+            if os.path.isdir(full): files.extend(self.get_files_from_path(full)) # recurse
+            if len(files) > 64: break # break if we have enough
+            self.add_valid_file(full, files)
+        return files
+
+    def add_valid_file(self, path, files):
+        patterns = ['*.ogg', '*.wav', '*.flac']
+        if any(fnmatch(path, pattern) for pattern in patterns):
+            files.append(path)
+
     def load_sound_files(self):
-        print("Reading sounds from path '{}'".format(self.path))
-        files = self.get_files(self.path)
+        print("Reading sounds from paths")
+        [print(" - {}".format(path)) for path in self.paths]
+        print("")
+
+        files = self.get_files(self.paths)
         random.shuffle(files)
 
         if len(files) == 0:
@@ -230,15 +253,11 @@ class AmbientSounds():
         print("Loaded sounds:")
         for index,file in enumerate(files):
             # Clean up common ancestors in sound file paths
-            listed_sound = file.replace(self.path + os.sep, '')
+            for path in self.paths:
+                if path in file:
+                    listed_sound = file.replace(path + os.sep, '')
             print("{}. {}".format(index + 1, listed_sound))
         return files
-
-    def load_sound(self, file_index):
-        try:
-            sound = self.sounds[file_index]
-        except IndexError:
-            self.sounds.append(pygame.mixer.Sound(self.files[file_index]))
 
     def event_loop(self):
         while True:
@@ -317,23 +336,27 @@ def main():
     parser.add_argument('-p', '--path', default=None, help="set the path where the sound files are")
     parser.add_argument('-d', '--duration', default=5, help="set the duration in minutes each sound will play: default=5")
     parser.add_argument('-n', '--noinput', action='store_true', help="disable the stdin input capture")
-    (args, remaining_args) = parser.parse_known_args(sys.argv)
+    parser.add_argument('paths', nargs="*", help="load given sound file(s) or path(s)")
+    (args, remaining_args) = parser.parse_known_args(sys.argv[1:])
 
     # Display version and exit
     if args.version:
         print(AmbientSounds.get_version())
         sys.exit(0)
 
-    # Determine path to sounds
-    sounds_path = None
-    if args.path:
-        sounds_path = os.path.abspath(args.path)
+    # Determine paths to sounds
+    if args.paths:
+        sounds_paths = [os.path.abspath(path) for path in args.paths]
+    else:
+        sounds_paths = None
+        if args.path:
+            sounds_paths = [os.path.abspath(args.path)]
 
     # Initialize pygame
     pygame.init()
 
     # Initialize AmbientSounds
-    ambience = AmbientSounds(path=sounds_path, duration=args.duration, noinput=args.noinput)
+    ambience = AmbientSounds(paths=sounds_paths, duration=args.duration, noinput=args.noinput)
     ambience.start()
 
     # This creates a timer event for the "tick" that will be passed to the

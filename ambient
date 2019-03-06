@@ -132,10 +132,10 @@ class AmbientSounds():
             self.stop_sound(self.current_sound)
             self.start_next_sound()
 
-    def start_next_sound(self):
+    def start_next_sound(self, fade_override=None):
         self.current_sound = self.get_next_sound()
 
-        self.play_sound(self.current_sound)
+        self.play_sound(self.current_sound, fade_override)
 
     def get_next_sound(self):
         next_sound = self.current_sound + 1
@@ -145,10 +145,10 @@ class AmbientSounds():
 
         return next_sound
 
-    def start_previous_sound(self):
+    def start_previous_sound(self, fade_override=None):
         self.current_sound = self.get_previous_sound()
 
-        self.play_sound(self.current_sound)
+        self.play_sound(self.current_sound, fade_override)
 
     def get_previous_sound(self):
         previous_sound = self.current_sound - 1
@@ -161,12 +161,12 @@ class AmbientSounds():
     def next(self):
         self.load_sound(self.get_next_sound())
         self.stop_sound(self.current_sound, 2)
-        self.start_next_sound()
+        self.start_next_sound(2)
 
     def previous(self):
         self.load_sound(self.get_previous_sound())
         self.stop_sound(self.current_sound, 2)
-        self.start_previous_sound()
+        self.start_previous_sound(2)
 
     def play_sound(self, index, fade_override=None):
         fade_duration, fade_ms = self._get_fade_duration(fade_override)

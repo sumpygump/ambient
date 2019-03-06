@@ -43,7 +43,7 @@ class AmbientSounds():
     play_timer = 0
 
     # Storage of sound objects
-    sounds = []
+    sounds = dict()
     current_sound = 0
     animate_chars = "◐◓◑◒"
     animate_position = 0
@@ -145,20 +145,34 @@ class AmbientSounds():
 
         return next_sound
 
+    def start_previous_sound(self):
+        self.current_sound = self.get_previous_sound()
+
+        self.play_sound(self.current_sound)
+
+    def get_previous_sound(self):
+        previous_sound = self.current_sound - 1
+
+        if (previous_sound < 0):
+            previous_sound = len(self.files) - 1
+
+        return previous_sound
+
     def next(self):
         self.load_sound(self.get_next_sound())
         self.stop_sound(self.current_sound, 2)
-        self.current_sound = self.get_next_sound()
-        self.play_sound(self.current_sound, 2)
+        self.start_next_sound()
+
+    def previous(self):
+        self.load_sound(self.get_previous_sound())
+        self.stop_sound(self.current_sound, 2)
+        self.start_previous_sound()
 
     def play_sound(self, index, fade_override=None):
         fade_duration, fade_ms = self._get_fade_duration(fade_override)
 
-        try:
-            self.sounds[index].play(-1, fade_ms=fade_ms)
-        except IndexError:
-            self.load_sound(index)
-
+        self.load_sound(index)
+        self.sounds[index].play(-1, fade_ms=fade_ms)
         self.play_timer = int(self.play_duration - (fade_duration / 2))
 
     def stop_sound(self, index, fade_override=None):
@@ -202,10 +216,8 @@ class AmbientSounds():
             self.set_volume(self.volume)
 
     def load_sound(self, file_index):
-        try:
-            sound = self.sounds[file_index]
-        except IndexError:
-            self.sounds.append(pygame.mixer.Sound(self.files[file_index]))
+        if file_index not in self.sounds:
+            self.sounds[file_index] = pygame.mixer.Sound(self.files[file_index])
 
     def get_files(self, paths):
         files = []
@@ -287,6 +299,8 @@ class AmbientSounds():
         print(chr(key_code), end="")
         if key_code == K_n:
             self.next()
+        elif key_code == K_p:
+            self.previous()
         elif key_code == K_q:
             self.the_end()
         elif key_code == K_LEFTBRACKET:

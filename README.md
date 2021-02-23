@@ -81,3 +81,4 @@ Credit goes to the following for the sound files included in this package:
 - chzmn for [`perfect-storm.ogg`](https://weather.ambient-mixer.com/the-perfect-storm)
 - Hargisss Sound for [`spring-birds.ogg`](https://freesound.org/people/hargissssound/sounds/345851/)
 - Trekcore.com for [`warp-core-hum.ogg`](http://www.trekcore.com/audio/)
+- NASA/JPL for [`mars-perseverance.ogg`](https://github.com/symfony/recipes-contrib/tree/master/google/apiclient/2.0)

@@ -23,10 +23,12 @@ import tty
 from pygame.locals import *
 from pprint import pprint
 
+AMBIENT_TICK = USEREVENT + 1
+
 class AmbientSounds():
     """AmbientSounds class"""
 
-    version = "1.0.9"
+    version = "1.0.10"
 
     # FPS: Low number is used to reduce CPU;
     # Don't really need pygame's cycle running so frequently
@@ -56,13 +58,18 @@ class AmbientSounds():
     # Whether to listen to stdin in cli (experimental
     noinput = False
 
+    # Whether to silence output
+    quiet = False
+
     # Volume
     volume = 1.0
     muted = False
 
-    def __init__(self, paths=None, duration=5, noinput=False):
+    def __init__(self, paths=None, duration=5, noinput=False, quiet=False, initialize_sounds=True):
         if paths:
             self.paths = paths
+        self.noinput = bool(noinput)
+        self.quiet = bool(quiet)
 
         # Calculate number of half seconds from minutes
         self.play_duration = float(duration) * (self.fps * 60);
@@ -72,11 +79,12 @@ class AmbientSounds():
             self.fade_duration = float(self.play_duration / 5.0) # 5% of sound duration
             self.fade_ms = int(self.fade_duration * (1000.0 / self.fps))
 
-        print(AmbientSounds.get_version())
+        if not self.quiet:
+            print(AmbientSounds.get_version())
 
         self.files = self.load_sound_files()
-
-        self.noinput = bool(noinput)
+        if initialize_sounds:
+            self.initialize_sounds()
 
     def get_version():
         return "Ambient version {}".format(AmbientSounds.version)
@@ -87,8 +95,9 @@ class AmbientSounds():
             pygame.quit()
             sys.exit(1)
 
-        print("\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
-        if not self.noinput:
+        if not self.quiet:
+            print("\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
+        if not self.noinput and not self.quiet:
             print("Press '[' and ']' to change volume and press 'm' to mute.")
             print("Press 'n' to go to next sound, or 'p' to go to previous sound. Press 'q' to quit.", flush=True)
         if sys.stdout.isatty():
@@ -103,7 +112,7 @@ class AmbientSounds():
 
     def tick(self):
         self.handle_play()
-        if sys.stdout.isatty():
+        if sys.stdout.isatty() and not self.quiet:
             self.print_current_sound()
 
     def print_current_sound(self):
@@ -120,7 +129,7 @@ class AmbientSounds():
         if self.muted:
             volume_str = " [mute]"
 
-        print("\r\033[K▶  Playing {} {} {} ".format(sound_name, animate_char, volume_str), end="")
+        print("\r\033[K▶  Playing {} {} {}".format(sound_name, animate_char, volume_str), end="")
 
     def handle_play(self):
         if self.play_timer > 0:
@@ -181,8 +190,9 @@ class AmbientSounds():
         self.sounds[index].fadeout(fade_ms)
 
     def end_fadeout(self, duration = 4000):
-        print()
-        print("Stopping sounds...", flush=True)
+        if not self.quiet:
+            print()
+            print("Stopping sounds...", flush=True)
         pygame.mixer.fadeout(duration)
         pygame.time.wait(duration)
         print("Goodbye.", flush=True)
@@ -217,7 +227,7 @@ class AmbientSounds():
 
     def load_sound(self, file_index):
         if file_index not in self.sounds:
-            self.sounds[file_index] = pygame.mixer.Sound(self.files[file_index])
+            self.sounds[file_index] = pygame.mixer.Sound(file=self.files[file_index])
 
     def get_files(self, paths):
         files = []
@@ -252,9 +262,10 @@ class AmbientSounds():
             files.append(path)
 
     def load_sound_files(self):
-        print("Reading sounds from paths")
-        [print(" - {}".format(path)) for path in self.paths]
-        print("")
+        if not self.quiet:
+            print("Reading sounds from paths")
+            [print(" - {}".format(path)) for path in self.paths]
+            print("")
 
         files = self.get_files(self.paths)
         random.shuffle(files)
@@ -262,14 +273,26 @@ class AmbientSounds():
         if len(files) == 0:
             return files
 
-        print("Loaded sounds:")
-        for index,file in enumerate(files):
-            # Clean up common ancestors in sound file paths
-            for path in self.paths:
-                if path in file:
-                    listed_sound = file.replace(path + os.sep, '')
-            print("{}. {}".format(index + 1, listed_sound))
+        if not self.quiet:
+            print("Sounds:")
+            for index,file in enumerate(files):
+                # Clean up common ancestors in sound file paths
+                for path in self.paths:
+                    if path in file:
+                        listed_sound = file.replace(path + os.sep, '')
+                print("{}. {}".format(index + 1, listed_sound))
+
         return files
+
+    def initialize_sounds(self):
+        if not self.quiet:
+            print("\nInitializing sounds ", end="", flush=True)
+        for i in range(0, len(self.files)):
+            if not self.quiet:
+                print(".", end="", flush=True)
+            self.load_sound(i)
+        if not self.quiet:
+            print()
 
     def event_loop(self):
         while True:
@@ -284,7 +307,7 @@ class AmbientSounds():
 
     def handle_events(self, char_input=False):
         for event in pygame.event.get():
-            if event.type == USEREVENT + 1:
+            if event.type == AMBIENT_TICK:
                 self.tick()
             if event.type == pygame.KEYUP:
                 # Keyboard in pygame window (macos)
@@ -293,10 +316,12 @@ class AmbientSounds():
             # Stdin in cli
             self.handle_input(ord(char_input))
 
+        # Advance game tick and wait to continue execution
         pygame.time.Clock().tick(self.fps)
 
     def handle_input(self, key_code):
-        print(chr(key_code), end="")
+        # For debugging
+        #print(chr(key_code), end="")
         if key_code == K_n:
             self.next()
         elif key_code == K_p:
@@ -346,10 +371,12 @@ class StdinReader():
 def main():
     # Handle command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--version', action='store_true', help="show version and exit")
-    parser.add_argument('-p', '--path', default=None, help="set the path where the sound files are")
     parser.add_argument('-d', '--duration', default=5, help="set the duration in minutes each sound will play: default=5")
+    parser.add_argument('-i', '--noinit', action='store_false', help="do not pre-initialize all sounds at start")
     parser.add_argument('-n', '--noinput', action='store_true', help="disable the stdin input capture")
+    parser.add_argument('-p', '--path', default=None, help="set the path where the sound files are")
+    parser.add_argument('-q', '--quiet', action='store_true', help="produce no output")
+    parser.add_argument('-v', '--version', action='store_true', help="show version and exit")
     parser.add_argument('paths', nargs="*", help="load given sound file(s) or path(s)")
     (args, remaining_args) = parser.parse_known_args(sys.argv[1:])
 
@@ -370,12 +397,18 @@ def main():
     pygame.init()
 
     # Initialize AmbientSounds
-    ambience = AmbientSounds(paths=sounds_paths, duration=args.duration, noinput=args.noinput)
+    ambience = AmbientSounds(
+        paths=sounds_paths,
+        duration=args.duration,
+        noinput=args.noinput,
+        quiet=args.quiet,
+        initialize_sounds=args.noinit
+    )
     ambience.start()
 
     # This creates a timer event for the "tick" that will be passed to the
     # ambience class object. It is measured in milliseconds (1000 = 1 second)
-    pygame.time.set_timer(USEREVENT + 1, int(1000 / ambience.fps))
+    pygame.time.set_timer(AMBIENT_TICK, int(1000 / ambience.fps))
 
     # Event loop
     if ambience.noinput:

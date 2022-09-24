@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-#-----------------------------------------------------#
+# ----------------------------------------------------#
 #       _              _     _                        #
 #      / \   _ __ ___ | |__ (_) ___ _ __   ___ ___    #
 #     / _ \ | '_ ` _ \| '_ \| |/ _ \ '_ \ / __/ _ \   #
 #    / ___ \| | | | | | |_) | |  __/ | | | (_|  __/   #
 #   /_/   \_\_| |_| |_|_.__/|_|\___|_| |_|\___\___|   #
 #                                                     #
-#-----------------------------------------------------#
+# ----------------------------------------------------#
 
 import argparse
 import fcntl
 from fnmatch import fnmatch
+import hashlib
 import os
 import pygame
 import random
@@ -25,10 +26,11 @@ from pprint import pprint
 
 AMBIENT_TICK = USEREVENT + 1
 
-class AmbientSounds():
+
+class AmbientSounds:
     """AmbientSounds class"""
 
-    version = "1.0.10"
+    version = "1.0.11"
 
     # FPS: Low number is used to reduce CPU;
     # Don't really need pygame's cycle running so frequently
@@ -45,7 +47,7 @@ class AmbientSounds():
     play_timer = 0
 
     # Storage of sound objects
-    sounds = dict()
+    sounds = {}
     current_sound = 0
     animate_chars = "◐◓◑◒"
     animate_position = 0
@@ -65,18 +67,20 @@ class AmbientSounds():
     volume = 1.0
     muted = False
 
-    def __init__(self, paths=None, duration=5, noinput=False, quiet=False, initialize_sounds=True):
+    def __init__(
+        self, paths=None, duration=5, noinput=False, quiet=False, initialize_sounds=True
+    ):
         if paths:
             self.paths = paths
         self.noinput = bool(noinput)
         self.quiet = bool(quiet)
 
         # Calculate number of half seconds from minutes
-        self.play_duration = float(duration) * (self.fps * 60);
+        self.play_duration = float(duration) * (self.fps * 60)
 
         # If the duration is shorter than the standard fade, make a new fade duration
-        if (self.play_duration <= self.fps * 60):
-            self.fade_duration = float(self.play_duration / 5.0) # 5% of sound duration
+        if self.play_duration <= self.fps * 60:
+            self.fade_duration = float(self.play_duration / 5.0)  # 5% of sound duration
             self.fade_ms = int(self.fade_duration * (1000.0 / self.fps))
 
         if not self.quiet:
@@ -99,16 +103,21 @@ class AmbientSounds():
             print("\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
         if not self.noinput and not self.quiet:
             print("Press '[' and ']' to change volume and press 'm' to mute.")
-            print("Press 'n' to go to next sound, or 'p' to go to previous sound. Press 'q' to quit.", flush=True)
+            print(
+                "Press 'n' to go to next sound, or 'p' to go to previous sound. Press 'q' to quit.",
+                flush=True,
+            )
         if sys.stdout.isatty():
-            print("\033[?25l") # Hide cursor
+            print("\033[?25l")  # Hide cursor
 
         # Load the first sound
         self.load_sound(self.current_sound)
 
         # Start first sound
-        self.sounds[self.current_sound].play(-1, fade_ms=3000)
-        self.play_timer = int(self.play_duration - (self.fade_duration / 2) - (3 * self.fps))
+        self.sounds[self.get_sound_id(self.current_sound)].play(-1, fade_ms=3000)
+        self.play_timer = int(
+            self.play_duration - (self.fade_duration / 2) - (3 * self.fps)
+        )
 
     def tick(self):
         self.handle_play()
@@ -129,7 +138,10 @@ class AmbientSounds():
         if self.muted:
             volume_str = " [mute]"
 
-        print("\r\033[K▶  Playing {} {} {}".format(sound_name, animate_char, volume_str), end="")
+        print(
+            "\r\033[K▶  Playing {} {} {}".format(sound_name, animate_char, volume_str),
+            end="",
+        )
 
     def handle_play(self):
         if self.play_timer > 0:
@@ -149,7 +161,7 @@ class AmbientSounds():
     def get_next_sound(self):
         next_sound = self.current_sound + 1
 
-        if (next_sound >= len(self.files)):
+        if next_sound >= len(self.files):
             next_sound = 0
 
         return next_sound
@@ -162,7 +174,7 @@ class AmbientSounds():
     def get_previous_sound(self):
         previous_sound = self.current_sound - 1
 
-        if (previous_sound < 0):
+        if previous_sound < 0:
             previous_sound = len(self.files) - 1
 
         return previous_sound
@@ -181,15 +193,15 @@ class AmbientSounds():
         fade_duration, fade_ms = self._get_fade_duration(fade_override)
 
         self.load_sound(index)
-        self.sounds[index].play(-1, fade_ms=fade_ms)
+        self.sounds[self.get_sound_id(index)].play(-1, fade_ms=fade_ms)
         self.play_timer = int(self.play_duration - (fade_duration / 2))
 
     def stop_sound(self, index, fade_override=None):
         fade_duration, fade_ms = self._get_fade_duration(fade_override)
 
-        self.sounds[index].fadeout(fade_ms)
+        self.sounds[self.get_sound_id(index)].fadeout(fade_ms)
 
-    def end_fadeout(self, duration = 4000):
+    def end_fadeout(self, duration=4000):
         if not self.quiet:
             print()
             print("Stopping sounds...", flush=True)
@@ -226,8 +238,15 @@ class AmbientSounds():
             self.set_volume(self.volume)
 
     def load_sound(self, file_index):
-        if file_index not in self.sounds:
-            self.sounds[file_index] = pygame.mixer.Sound(file=self.files[file_index])
+        if self.get_sound_id(file_index) not in self.sounds:
+            try:
+                self.sounds[self.get_sound_id(file_index)] = pygame.mixer.Sound(
+                    file=self.files[file_index]
+                )
+            except pygame.error as e:
+                # Remove this file so we skip trying to play it
+                del self.files[file_index]
+                print("\nERROR {} -- skipping sound.".format(str(e)))
 
     def get_files(self, paths):
         files = []
@@ -247,17 +266,26 @@ class AmbientSounds():
 
         return files
 
+    def get_sound_id(self, file_index):
+        try:
+            file_ = self.files[file_index]
+        except IndexError:
+            print("Error: cannot reference sound {}".format(file_index))
+        return hashlib.md5(str(file_index).encode("utf-8")).hexdigest()[:6]
+
     def get_files_from_path(self, path):
         files = []
         for f in os.listdir(path):
             full = os.path.join(path, f)
-            if os.path.isdir(full): files.extend(self.get_files_from_path(full)) # recurse
-            if len(files) > 64: break # break if we have enough
+            if os.path.isdir(full):
+                files.extend(self.get_files_from_path(full))  # recurse
+            if len(files) > 64:
+                break  # break if we have enough
             self.add_valid_file(full, files)
         return files
 
     def add_valid_file(self, path, files):
-        patterns = ['*.ogg', '*.wav', '*.flac']
+        patterns = ["*.ogg", "*.wav", "*.flac"]
         if any(fnmatch(path, pattern) for pattern in patterns):
             files.append(path)
 
@@ -275,11 +303,11 @@ class AmbientSounds():
 
         if not self.quiet:
             print("Sounds:")
-            for index,file in enumerate(files):
+            for index, file in enumerate(files):
                 # Clean up common ancestors in sound file paths
                 for path in self.paths:
                     if path in file:
-                        listed_sound = file.replace(path + os.sep, '')
+                        listed_sound = file.replace(path + os.sep, "")
                 print("{}. {}".format(index + 1, listed_sound))
 
         return files
@@ -287,7 +315,7 @@ class AmbientSounds():
     def initialize_sounds(self):
         if not self.quiet:
             print("\nInitializing sounds ", end="", flush=True)
-        for i in range(0, len(self.files)):
+        for i, _ in enumerate(self.files):
             if not self.quiet:
                 print(".", end="", flush=True)
             self.load_sound(i)
@@ -321,7 +349,7 @@ class AmbientSounds():
 
     def handle_input(self, key_code):
         # For debugging
-        #print(chr(key_code), end="")
+        # print(chr(key_code), end="")
         if key_code == K_n:
             self.next()
         elif key_code == K_p:
@@ -340,21 +368,24 @@ class AmbientSounds():
             self.end_fadeout()
             pygame.quit()
             if sys.stdout.isatty():
-                print("\033[?25h") # Show cursor
+                print("\033[?25h")  # Show cursor
             sys.exit(0)
         except BrokenPipeError:
             print("Exiting", file=sys.stderr)
         sys.exit(0)
         sys.stderr.close()
 
-class StdinReader():
+
+class StdinReader:
     class raw(object):
         def __init__(self, stream):
             self.stream = stream
             self.fd = self.stream.fileno()
+
         def __enter__(self):
             self.original_stty = termios.tcgetattr(self.stream)
             tty.setcbreak(self.stream)
+
         def __exit__(self, type, value, traceback):
             termios.tcsetattr(self.stream, termios.TCSANOW, self.original_stty)
 
@@ -362,22 +393,41 @@ class StdinReader():
         def __init__(self, stream):
             self.stream = stream
             self.fd = self.stream.fileno()
+
         def __enter__(self):
             self.orig_fl = fcntl.fcntl(self.fd, fcntl.F_GETFL)
             fcntl.fcntl(self.fd, fcntl.F_SETFL, self.orig_fl | os.O_NONBLOCK)
+
         def __exit__(self, *args):
             fcntl.fcntl(self.fd, fcntl.F_SETFL, self.orig_fl)
+
 
 def main():
     # Handle command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--duration', default=5, help="set the duration in minutes each sound will play: default=5")
-    parser.add_argument('-i', '--noinit', action='store_false', help="do not pre-initialize all sounds at start")
-    parser.add_argument('-n', '--noinput', action='store_true', help="disable the stdin input capture")
-    parser.add_argument('-p', '--path', default=None, help="set the path where the sound files are")
-    parser.add_argument('-q', '--quiet', action='store_true', help="produce no output")
-    parser.add_argument('-v', '--version', action='store_true', help="show version and exit")
-    parser.add_argument('paths', nargs="*", help="load given sound file(s) or path(s)")
+    parser.add_argument(
+        "-d",
+        "--duration",
+        default=5,
+        help="set the duration in minutes each sound will play: default=5",
+    )
+    parser.add_argument(
+        "-i",
+        "--noinit",
+        action="store_false",
+        help="do not pre-initialize all sounds at start",
+    )
+    parser.add_argument(
+        "-n", "--noinput", action="store_true", help="disable the stdin input capture"
+    )
+    parser.add_argument(
+        "-p", "--path", default=None, help="set the path where the sound files are"
+    )
+    parser.add_argument("-q", "--quiet", action="store_true", help="produce no output")
+    parser.add_argument(
+        "-v", "--version", action="store_true", help="show version and exit"
+    )
+    parser.add_argument("paths", nargs="*", help="load given sound file(s) or path(s)")
     (args, remaining_args) = parser.parse_known_args(sys.argv[1:])
 
     # Display version and exit
@@ -402,7 +452,7 @@ def main():
         duration=args.duration,
         noinput=args.noinput,
         quiet=args.quiet,
-        initialize_sounds=args.noinit
+        initialize_sounds=args.noinit,
     )
     ambience.start()
 
@@ -418,4 +468,6 @@ def main():
             with StdinReader.nonblocking(sys.stdin):
                 ambience.event_loop()
 
-if __name__ == '__main__': main()
+
+if __name__ == "__main__":
+    main()

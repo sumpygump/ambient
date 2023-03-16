@@ -1,0 +1,21 @@
+#!/bin/bash
+# Author: Simon Legner <Simon.Legner@gmail.com>
+
+convert () {
+  in="$1"
+  out="${in%.m4a}.ogg"
+  ffmpeg -i "$in" \
+    -acodec libvorbis -aq 4 -vn -ac 2 \
+    -map_metadata 0 \
+    "$out"
+}
+
+if [[ $# == 0 ]]; then
+  echo Converts m4a files to Ogg Vorbis using ffmpeg.
+  echo Usage: $0 file1.m4a file2.m4a ... fileN.m4a
+  echo ... produces file1.ogg file2.ogg ... fileN.ogg
+fi
+
+for i in "$@"; do
+  convert "$i"
+done

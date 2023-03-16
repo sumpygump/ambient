@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ambience"
-version = "1.0.12"
+version = "1.0.12.2"
 authors = [
     { name="Jansen Price", email="jansen.price@gmail.com" },
 ]
@@ -26,3 +26,9 @@ dependencies = [
 
 [project.scripts]
 ambience = "ambience:main"
+
+[tool.hatch.build]
+include = [
+  "sounds/**/*.ogg",
+  "**/*.py",
+]

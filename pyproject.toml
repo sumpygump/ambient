@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ambience"
+version = "1.0.12"
+authors = [
+    { name="Jansen Price", email="jansen.price@gmail.com" },
+]
+description = "Ambient soundscape player: plays audio files as background ambience"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pygame",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/sumpygump/ambient"
+"Bug Tracker" = "https://github.com/sumpygump/ambient/issues"
+
+[project.scripts]
+ambience = "ambience:main"

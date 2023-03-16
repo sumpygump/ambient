@@ -1,4 +1,4 @@
-# Ambient
+# Ambience
 
 Ambient soundscape player
 
@@ -9,14 +9,22 @@ It reads a directory for `.ogg`, `.wav` or `.flac` files. The program comes
 with a set of files, but can be used with any files on your computer of the
 supported types by using the `--path` parameter when invoking.
 
-## Installation
+## Installation with pip
+
+```
+pip install ambience
+```
+
+## Manual Installation
 
  - Requires python3
  - Requires pygame
 
+Clone this repository.
+
 Run `pip3 install --user -r requirements.txt` to install pygame if not already installed
 
-Recommended: link `ambient` in a directory on your path. E.g. `ln -s ambient ~/bin/ambient`
+Recommended: link `ambience` in a directory on your path. E.g. `ln -s ambience.py ~/bin/ambience`
 
 ### Alternate install for pygame (compile pygame from source)
 
@@ -37,10 +45,10 @@ sudo python3 setup.py install
 
 ## Usage
 
-To run with the default settings, simply run `ambient`. Use "ctrl-c" to stop.
+To run with the default settings, simply run `ambience`. Use "ctrl-c" to stop.
 
 ```
-usage: ambient [-h] [-v] [-p PATH] [-d DURATION] [-n] [paths [paths ...]]
+usage: ambience [-h] [-v] [-p PATH] [-d DURATION] [-n] [paths [paths ...]]
 
 positional arguments:
   paths                 load given sound file(s) or path(s)

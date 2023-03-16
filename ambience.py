@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Ambience: ambient soundscape player"""
 
 # ----------------------------------------------------#
 #       _              _     _                        #
@@ -18,11 +19,9 @@ import pygame
 import random
 import sys
 import termios
-import time
 import tty
 
-from pygame.locals import *
-from pprint import pprint
+from pygame.locals import *  # pylint: disable=wildcard-import
 
 AMBIENT_TICK = USEREVENT + 1
 
@@ -30,7 +29,7 @@ AMBIENT_TICK = USEREVENT + 1
 class AmbientSounds:
     """AmbientSounds class"""
 
-    version = "1.0.11"
+    version = "1.0.12"
 
     # FPS: Low number is used to reduce CPU;
     # Don't really need pygame's cycle running so frequently
@@ -84,14 +83,15 @@ class AmbientSounds:
             self.fade_ms = int(self.fade_duration * (1000.0 / self.fps))
 
         if not self.quiet:
-            print(AmbientSounds.get_version())
+            print(self.get_version())
 
         self.files = self.load_sound_files()
         if initialize_sounds:
             self.initialize_sounds()
 
-    def get_version():
-        return "Ambient version {}".format(AmbientSounds.version)
+    @classmethod
+    def get_version(cls):
+        return "Ambient version {}".format(cls.version)
 
     def start(self):
         if len(self.files) == 0:
@@ -104,7 +104,8 @@ class AmbientSounds:
         if not self.noinput and not self.quiet:
             print("Press '[' and ']' to change volume and press 'm' to mute.")
             print(
-                "Press 'n' to go to next sound, or 'p' to go to previous sound. Press 'q' to quit.",
+                "Press 'n' to go to next sound, "
+                "or 'p' to go to previous sound. Press 'q' to quit.",
                 flush=True,
             )
         if sys.stdout.isatty():
@@ -197,7 +198,7 @@ class AmbientSounds:
         self.play_timer = int(self.play_duration - (fade_duration / 2))
 
     def stop_sound(self, index, fade_override=None):
-        fade_duration, fade_ms = self._get_fade_duration(fade_override)
+        _, fade_ms = self._get_fade_duration(fade_override)
 
         self.sounds[self.get_sound_id(index)].fadeout(fade_ms)
 
@@ -216,14 +217,12 @@ class AmbientSounds:
 
     def decrease_volume(self):
         self.volume = self.volume - 0.05
-        if self.volume < 0.0:
-            self.volume = 0.0
+        self.volume = max(self.volume, 0.0)
         self.set_volume(self.volume)
 
     def increase_volume(self):
         self.volume = self.volume + 0.05
-        if self.volume > 1.0:
-            self.volume = 1.0
+        self.volume = min(self.volume, 1.0)
         self.set_volume(self.volume)
 
     def set_volume(self, level):
@@ -268,7 +267,7 @@ class AmbientSounds:
 
     def get_sound_id(self, file_index):
         try:
-            file_ = self.files[file_index]
+            _ = self.files[file_index]
         except IndexError:
             print("Error: cannot reference sound {}".format(file_index))
         return hashlib.md5(str(file_index).encode("utf-8")).hexdigest()[:6]
@@ -372,12 +371,16 @@ class AmbientSounds:
             sys.exit(0)
         except BrokenPipeError:
             print("Exiting", file=sys.stderr)
-        sys.exit(0)
         sys.stderr.close()
+        sys.exit(0)
 
 
 class StdinReader:
-    class raw(object):
+    """Stdin reader"""
+
+    class raw(object):  # pylint: disable=invalid-name
+        """Raw stdin input class"""
+
         def __init__(self, stream):
             self.stream = stream
             self.fd = self.stream.fileno()
@@ -386,10 +389,12 @@ class StdinReader:
             self.original_stty = termios.tcgetattr(self.stream)
             tty.setcbreak(self.stream)
 
-        def __exit__(self, type, value, traceback):
+        def __exit__(self, type_, value, traceback):
             termios.tcsetattr(self.stream, termios.TCSANOW, self.original_stty)
 
-    class nonblocking(object):
+    class nonblocking(object):  # pylint: disable=invalid-name
+        """Nonblocking input class"""
+
         def __init__(self, stream):
             self.stream = stream
             self.fd = self.stream.fileno()
@@ -428,7 +433,9 @@ def main():
         "-v", "--version", action="store_true", help="show version and exit"
     )
     parser.add_argument("paths", nargs="*", help="load given sound file(s) or path(s)")
-    (args, remaining_args) = parser.parse_known_args(sys.argv[1:])
+
+    # Returns tuple of args and remaining (unhandled args)
+    (args, _) = parser.parse_known_args(sys.argv[1:])
 
     # Display version and exit
     if args.version:

@@ -100,3 +100,8 @@ Credit goes to the following for the sound files included in this package:
 - juskiddink for [`seaside.ogg`](https://freesound.org/people/juskiddink/sounds/194868/)
 - SDLx for [`train.ogg`](https://freesound.org/people/SDLx/sounds/259988/)
 - Greim for the [machine-planet samples](https://greim.github.io/machine-planet/)
+- NASA/JPL for [`mars-ingenuity.ogg`](https://mars.nasa.gov/resources/25893/listen-to-nasas-ingenuity-mars-helicopter-in-flight/)
+- AdrienPola for [`amazon-rainforest.ogg`](https://freesound.org/people/AdrienPola/sounds/413976/)
+- dobroide for [`rural-spain.ogg`](https://freesound.org/people/dobroide/sounds/269218/)
+- Mynoise.net for [`the-pilgrim.ogg`](https://mynoise.net/NoiseMachines/tongueDrumSoundscapeGenerator.php)
+- anankalisto for [`resonance-of-the-gods.ogg`](https://freesound.org/people/anankalisto/sounds/139050/)

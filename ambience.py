@@ -201,8 +201,7 @@ class AmbientSounds():
     def stop_sound(self, index, fade_override=None) -> None:
         _, fade_ms = self._get_fade_duration(fade_override)
 
-        #self.sounds[self.get_sound_id(index)].fadeout(fade_ms)
-        pygame.mixer.Sound.fadeout(self.sounds[index], fade_ms)
+        self.sounds[self.get_sound_id(index)].fadeout(fade_ms)
 
     def end_fadeout(self, duration = 4000) -> None:
         if not self.quiet:

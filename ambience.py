@@ -20,13 +20,14 @@ import random
 import sys
 import termios
 import tty
+from typing import Dict, List, Tuple
 
 from pygame.locals import *  # pylint: disable=wildcard-import
 
 AMBIENT_TICK = USEREVENT + 1
 
 
-class AmbientSounds:
+class AmbientSounds():
     """AmbientSounds class"""
 
     version = "1.0.12"
@@ -46,7 +47,7 @@ class AmbientSounds:
     play_timer = 0
 
     # Storage of sound objects
-    sounds = {}
+    sounds: Dict[int, pygame.mixer.Sound] = dict()
     current_sound = 0
     animate_chars = "◐◓◑◒"
     animate_position = 0
@@ -54,7 +55,7 @@ class AmbientSounds:
     # Path and sound files
     package_path = os.path.dirname(os.path.realpath(__file__))
     paths = [os.path.join(package_path, "sounds")]
-    files = []
+    files: List[str] = []
 
     # Whether to listen to stdin in cli (experimental
     noinput = False
@@ -90,17 +91,17 @@ class AmbientSounds:
             self.initialize_sounds()
 
     @classmethod
-    def get_version(cls):
+    def get_version(cls) -> str:
         return "Ambient version {}".format(cls.version)
 
-    def start(self):
+    def start(self) -> None:
         if len(self.files) == 0:
             print("No sound files to load!")
             pygame.quit()
             sys.exit(1)
 
         if not self.quiet:
-            print("\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
+            print("\r\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
         if not self.noinput and not self.quiet:
             print("Press '[' and ']' to change volume and press 'm' to mute.")
             print(
@@ -120,12 +121,12 @@ class AmbientSounds:
             self.play_duration - (self.fade_duration / 2) - (3 * self.fps)
         )
 
-    def tick(self):
+    def tick(self) -> None:
         self.handle_play()
         if sys.stdout.isatty() and not self.quiet:
             self.print_current_sound()
 
-    def print_current_sound(self):
+    def print_current_sound(self) -> None:
         self.animate_position += 1
         if self.animate_position >= len(self.animate_chars):
             self.animate_position = 0
@@ -144,7 +145,7 @@ class AmbientSounds:
             end="",
         )
 
-    def handle_play(self):
+    def handle_play(self) -> None:
         if self.play_timer > 0:
             self.play_timer = self.play_timer - 1
             if self.play_timer == min(10, int(self.play_duration / 2)):
@@ -154,12 +155,12 @@ class AmbientSounds:
             self.stop_sound(self.current_sound)
             self.start_next_sound()
 
-    def start_next_sound(self, fade_override=None):
+    def start_next_sound(self, fade_override=None) -> None:
         self.current_sound = self.get_next_sound()
 
         self.play_sound(self.current_sound, fade_override)
 
-    def get_next_sound(self):
+    def get_next_sound(self) -> int:
         next_sound = self.current_sound + 1
 
         if next_sound >= len(self.files):
@@ -167,12 +168,12 @@ class AmbientSounds:
 
         return next_sound
 
-    def start_previous_sound(self, fade_override=None):
+    def start_previous_sound(self, fade_override=None) -> None:
         self.current_sound = self.get_previous_sound()
 
         self.play_sound(self.current_sound, fade_override)
 
-    def get_previous_sound(self):
+    def get_previous_sound(self) -> int:
         previous_sound = self.current_sound - 1
 
         if previous_sound < 0:
@@ -180,29 +181,30 @@ class AmbientSounds:
 
         return previous_sound
 
-    def next(self):
+    def next(self) -> None:
         self.load_sound(self.get_next_sound())
         self.stop_sound(self.current_sound, 2)
         self.start_next_sound(2)
 
-    def previous(self):
+    def previous(self) -> None:
         self.load_sound(self.get_previous_sound())
         self.stop_sound(self.current_sound, 2)
         self.start_previous_sound(2)
 
-    def play_sound(self, index, fade_override=None):
+    def play_sound(self, index, fade_override=None) -> None:
         fade_duration, fade_ms = self._get_fade_duration(fade_override)
 
         self.load_sound(index)
         self.sounds[self.get_sound_id(index)].play(-1, fade_ms=fade_ms)
         self.play_timer = int(self.play_duration - (fade_duration / 2))
 
-    def stop_sound(self, index, fade_override=None):
+    def stop_sound(self, index, fade_override=None) -> None:
         _, fade_ms = self._get_fade_duration(fade_override)
 
-        self.sounds[self.get_sound_id(index)].fadeout(fade_ms)
+        #self.sounds[self.get_sound_id(index)].fadeout(fade_ms)
+        pygame.mixer.Sound.fadeout(self.sounds[index], fade_ms)
 
-    def end_fadeout(self, duration=4000):
+    def end_fadeout(self, duration = 4000) -> None:
         if not self.quiet:
             print()
             print("Stopping sounds...", flush=True)
@@ -210,33 +212,33 @@ class AmbientSounds:
         pygame.time.wait(duration)
         print("Goodbye.", flush=True)
 
-    def _get_fade_duration(self, fade_override=None):
+    def _get_fade_duration(self, fade_override=None) -> Tuple[int, int]:
         fade_duration = fade_override if fade_override else self.fade_duration
         fade_ms = int(fade_duration * (1000.0 / self.fps))
         return (fade_duration, fade_ms)
 
-    def decrease_volume(self):
+    def decrease_volume(self) -> None:
         self.volume = self.volume - 0.05
         self.volume = max(self.volume, 0.0)
         self.set_volume(self.volume)
 
-    def increase_volume(self):
+    def increase_volume(self) -> None:
         self.volume = self.volume + 0.05
         self.volume = min(self.volume, 1.0)
         self.set_volume(self.volume)
 
-    def set_volume(self, level):
+    def set_volume(self, level) -> None:
         for i in range(pygame.mixer.get_num_channels()):
             pygame.mixer.Channel(i).set_volume(level)
 
-    def mute(self):
+    def mute(self) -> None:
         self.muted = not self.muted
         if self.muted:
             self.set_volume(0.0)
         else:
             self.set_volume(self.volume)
 
-    def load_sound(self, file_index):
+    def load_sound(self, file_index) -> None:
         if self.get_sound_id(file_index) not in self.sounds:
             try:
                 self.sounds[self.get_sound_id(file_index)] = pygame.mixer.Sound(
@@ -247,7 +249,7 @@ class AmbientSounds:
                 del self.files[file_index]
                 print("\nERROR {} -- skipping sound.".format(str(e)))
 
-    def get_files(self, paths):
+    def get_files(self, paths) -> List[str]:
         files = []
 
         for path in paths:
@@ -272,7 +274,7 @@ class AmbientSounds:
             print("Error: cannot reference sound {}".format(file_index))
         return hashlib.md5(str(file_index).encode("utf-8")).hexdigest()[:6]
 
-    def get_files_from_path(self, path):
+    def get_files_from_path(self, path) -> List[str]:
         files = []
         for f in os.listdir(path):
             full = os.path.join(path, f)
@@ -283,15 +285,16 @@ class AmbientSounds:
             self.add_valid_file(full, files)
         return files
 
-    def add_valid_file(self, path, files):
+    def add_valid_file(self, path, files) -> None:
         patterns = ["*.ogg", "*.wav", "*.flac"]
         if any(fnmatch(path, pattern) for pattern in patterns):
             files.append(path)
 
-    def load_sound_files(self):
+    def load_sound_files(self) -> List[str]:
         if not self.quiet:
             print("Reading sounds from paths")
-            [print(" - {}".format(path)) for path in self.paths]
+            for path in self.paths:
+                print(" - {}".format(path))
             print("")
 
         files = self.get_files(self.paths)
@@ -311,28 +314,26 @@ class AmbientSounds:
 
         return files
 
-    def initialize_sounds(self):
+    def initialize_sounds(self) -> None:
         if not self.quiet:
             print("\nInitializing sounds ", end="", flush=True)
         for i, _ in enumerate(self.files):
             if not self.quiet:
                 print(".", end="", flush=True)
             self.load_sound(i)
-        if not self.quiet:
-            print()
 
-    def event_loop(self):
+    def event_loop(self) -> None:
         while True:
             try:
                 if self.noinput:
-                    char = False
+                    char = ""
                 else:
                     char = sys.stdin.read(1)
                 self.handle_events(char)
             except KeyboardInterrupt:
                 self.the_end()
 
-    def handle_events(self, char_input=False):
+    def handle_events(self, char_input="") -> None:
         for event in pygame.event.get():
             if event.type == AMBIENT_TICK:
                 self.tick()
@@ -346,7 +347,7 @@ class AmbientSounds:
         # Advance game tick and wait to continue execution
         pygame.time.Clock().tick(self.fps)
 
-    def handle_input(self, key_code):
+    def handle_input(self, key_code) -> None:
         # For debugging
         # print(chr(key_code), end="")
         if key_code == K_n:
@@ -362,7 +363,7 @@ class AmbientSounds:
         elif key_code == K_m:
             self.mute()
 
-    def the_end(self):
+    def the_end(self) -> None:
         try:
             self.end_fadeout()
             pygame.quit()

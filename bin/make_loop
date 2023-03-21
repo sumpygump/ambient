@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""Generating a seamless looping file from a sound file"""
+
+from pathlib import Path
+import sys
+
+from pydub import AudioSegment
+
+# Default length of output file in seconds
+DEFAULT_LEN = 120
+
+
+def generate_looping_audio(input_filename, duration=None, start=0, db_boost=0):
+    """Generate a looping audio file
+
+    Params
+      input_filename: name of audio file to process
+      duration: duration in seconds to the end of the audio to clip from original
+      start: time in seconds where the audio clip should start
+      db_boost: give a db boost to the resulting audio (can be positive or negative)
+    """
+
+    print("Opening file {}".format(input_filename))
+    sound = AudioSegment.from_file(input_filename)
+    print("Original audio is {} seconds".format(sound.duration_seconds))
+    total_duration = len(sound)
+
+    if duration is None:
+        duration = DEFAULT_LEN
+
+    print("Clipping audio to {} seconds, starting at {}".format(duration, start))
+
+    duration_ms = duration * 1000
+    start_ms = start * 1000
+    if start_ms > total_duration:
+        print("Error: cannot start at {}. Is longer than original audio".format(start))
+        sys.exit(1)
+
+    end_ms = duration_ms + start_ms
+    sound = sound[start_ms:end_ms]
+
+    # Process a db boost if any
+    if db_boost:
+        print("Adding a db boost of {}".format(db_boost))
+        sound = sound + float(db_boost)
+
+    # Make the edges smooth
+    # "Poor man's zero crossing"
+    sound = sound.fade_in(2).fade_out(2)
+
+    # Slice in half
+    midpoint = duration_ms / 2
+    part_a = sound[0:midpoint]
+    part_b = sound[midpoint:]
+
+    # Fade the edges (swap sides)
+    cross_duration = min(20000, duration_ms / 4)
+    print("Crossfade duration:", cross_duration / 1000)
+    sound = part_b.append(part_a, crossfade=cross_duration)
+
+    output_filename = "{}-looped.ogg".format(Path(input_filename).stem)
+    print("Generating output file '{}'...".format(output_filename))
+    sound.export(output_filename, format="ogg")
+
+
+def main():
+    if len(sys.argv) == 1:
+        print("Usage: command <filename> [duration_seconds] [start_seconds] [db_boost]")
+        sys.exit(1)
+
+    args = sys.argv.copy()
+
+    # Tack on the optional items in case they aren't provided
+    args.append(None)  # duration_seconds
+    args.append(0)  # start_seconds
+    args.append(0)  # db boost
+
+    args.pop(0)  # Take off the program name
+
+    input_file = args[0]
+    duration = int(args[1])
+    start = int(args[2])
+    db_boost = args[3]
+    generate_looping_audio(input_file, duration, start, db_boost)
+
+
+if __name__ == "__main__":
+    main()

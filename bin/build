@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+# This is for making a new build on pypi
+# See this guide for details: https://packaging.python.org/en/latest/tutorials/packaging-projects/
+#
+TPUT_RESET="$(tput sgr 0)"
+TPUT_RED="$(tput setaf 1)"
+TPUT_YELLOW="$(tput setaf 3)"
+TPUT_WHITE="$(tput setaf 7)"
+TPUT_BGRED="$(tput setab 1)"
+TPUT_BOLD="$(tput bold)"
+
+info() {
+    printf >&2 "${TPUT_YELLOW}%s${TPUT_RESET}\n" "$*"
+}
+error() {
+    printf >&2 "${TPUT_RED}%s${TPUT_RESET}\n" "$*"
+}
+fatal() {
+    printf >&2 "${TPUT_BGRED}${TPUT_WHITE}${TPUT_BOLD} ABORTED ${TPUT_RESET} %s \n\n" "$*"
+    exit 1
+}
+
+# Should have virtual env (venv) already activated
+if [ "$VIRTUAL_ENV" == "" ]; then
+    fatal "First activate virtual environment (source .venv/bin/activate)"
+fi
+
+# build is to build the dist
+# twine is to publish to pypi
+# yolk is for checking the version from the registry
+info "Getting latest dependencies for packaging tools"
+pip install --upgrade build twine yolk3k
+
+echo
+info "Checking latest version of package in pypi..."
+
+current_version=$(yolk -V ambience | awk '{print $2}')
+echo CURRENT PUBLISHED VERSION: "$current_version"
+
+attempt_version=$(grep version pyproject.toml | awk '{print $3}' | sed -r 's/"//g')
+echo ATTEMPTING VERSION: "$attempt_version"
+
+if [ "$current_version" == "$attempt_version" ]; then
+    echo
+    error "ERROR. The version '$current_version' in the pyproject.toml file is already published."
+    error "Update the version in pyproject.toml first to proceed!"
+    fatal "Cannot proceed"
+fi
+
+echo
+info "Deleting dist directory"
+rm -rf dist
+
+info "Running build command"
+python -m build
+
+tree dist
+
+echo
+info "If build was successful, then run this command to publish to pypi:"
+echo "python3 -m twine upload --repository testpypi dist/*"

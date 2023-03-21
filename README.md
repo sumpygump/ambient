@@ -105,3 +105,4 @@ Credit goes to the following for the sound files included in this package:
 - dobroide for [`rural-spain.ogg`](https://freesound.org/people/dobroide/sounds/269218/)
 - Mynoise.net for [`the-pilgrim.ogg`](https://mynoise.net/NoiseMachines/tongueDrumSoundscapeGenerator.php)
 - anankalisto for [`resonance-of-the-gods.ogg`](https://freesound.org/people/anankalisto/sounds/139050/)
+- Emanuele Correani for [`train-station.ogg`](https://freesound.org/people/Emanuele_Correani/sounds/332769/)

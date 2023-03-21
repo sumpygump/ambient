@@ -10,7 +10,7 @@ from pydub import AudioSegment
 DEFAULT_LEN = 120
 
 
-def generate_looping_audio(input_filename, duration=None, start=0, db_boost=0):
+def generate_looping_audio(input_filename, duration=0, start=0, db_boost=0):
     """Generate a looping audio file
 
     Params
@@ -25,7 +25,7 @@ def generate_looping_audio(input_filename, duration=None, start=0, db_boost=0):
     print("Original audio is {} seconds".format(sound.duration_seconds))
     total_duration = len(sound)
 
-    if duration is None:
+    if duration == 0:
         duration = DEFAULT_LEN
 
     print("Clipping audio to {} seconds, starting at {}".format(duration, start))
@@ -71,12 +71,13 @@ def main():
     args = sys.argv.copy()
 
     # Tack on the optional items in case they aren't provided
-    args.append(None)  # duration_seconds
-    args.append(0)  # start_seconds
-    args.append(0)  # db boost
+    args.append("0")  # duration_seconds
+    args.append("0")  # start_seconds
+    args.append("0")  # db boost
 
     args.pop(0)  # Take off the program name
 
+    print(args)
     input_file = args[0]
     duration = int(args[1])
     start = int(args[2])

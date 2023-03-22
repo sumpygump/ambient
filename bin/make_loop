@@ -38,6 +38,7 @@ def generate_looping_audio(input_filename, duration=0, start=0, db_boost=0):
 
     end_ms = duration_ms + start_ms
     sound = sound[start_ms:end_ms]
+    print("Clip is {} seconds".format(sound.duration_seconds))
 
     # Process a db boost if any
     if db_boost:
@@ -58,6 +59,8 @@ def generate_looping_audio(input_filename, duration=0, start=0, db_boost=0):
     print("Crossfade duration:", cross_duration / 1000)
     sound = part_b.append(part_a, crossfade=cross_duration)
 
+    print("Looped clip is {} seconds".format(sound.duration_seconds))
+
     output_filename = "{}-looped.ogg".format(Path(input_filename).stem)
     print("Generating output file '{}'...".format(output_filename))
     sound.export(output_filename, format="ogg")
@@ -77,11 +80,10 @@ def main():
 
     args.pop(0)  # Take off the program name
 
-    print(args)
     input_file = args[0]
     duration = int(args[1])
     start = int(args[2])
-    db_boost = args[3]
+    db_boost = int(args[3])
     generate_looping_audio(input_file, duration, start, db_boost)
 
 

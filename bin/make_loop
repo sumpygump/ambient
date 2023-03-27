@@ -6,8 +6,8 @@ import sys
 
 from pydub import AudioSegment
 
-# Default length of output file in seconds
-DEFAULT_LEN = 120
+# Default max length of output file in seconds
+DEFAULT_MAX_LEN = 300
 
 
 def generate_looping_audio(input_filename, duration=0, start=0, db_boost=0):
@@ -26,7 +26,7 @@ def generate_looping_audio(input_filename, duration=0, start=0, db_boost=0):
     total_duration = len(sound)
 
     if duration == 0:
-        duration = DEFAULT_LEN
+        duration = min(DEFAULT_MAX_LEN, sound.duration_seconds)
 
     print("Clipping audio to {} seconds, starting at {}".format(duration, start))
 

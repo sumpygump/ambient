@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Get loudness of an audio file"""
+
+from fnmatch import fnmatch
+import os
+from pathlib import Path
+import sys
+
+from pydub import AudioSegment
+import pyloudnorm
+import soundfile
+
+
+def get_loudness(input_filename):
+    # load audio (with shape (samples, channels))
+    data, rate = soundfile.read(input_filename)
+
+    print(rate, end=" ")
+    meter = pyloudnorm.Meter(rate)  # create BS.1770 meter
+    loudness = meter.integrated_loudness(data)  # measure loudness
+
+    return loudness
+
+
+def normalize(input_filename, target_lufs=-20.0):
+    data, rate = soundfile.read(input_filename)  # load audio
+    print("Rate:", rate, end=" ")
+
+    # measure the loudness first
+    meter = pyloudnorm.Meter(rate)  # create BS.1770 meter
+    loudness = meter.integrated_loudness(data)
+
+    print(loudness, end=" ")
+    print("Processing", end=" ", flush=True)
+
+    # Loudness normalize audio to target dB LUFS
+    loudness_normalized_audio = pyloudnorm.normalize.loudness(
+        data, loudness, target_lufs
+    )
+
+    # Write to wav file
+    wav_filename = "{}-nrm.wav".format(Path(input_filename).stem)
+    soundfile.write(wav_filename, loudness_normalized_audio, rate)
+
+    # Re-read the wav file and overwrite the origin ogg file
+    sound = AudioSegment.from_file(wav_filename)
+    sound = sound.set_frame_rate(44100)
+    sound.export(input_filename, format="ogg")
+
+    # Delete the temp wav file
+    os.remove(wav_filename)
+
+    return "done"
+
+
+def get_files_from_path(path):
+    files = []
+    for f in os.listdir(path):
+        full = os.path.join(path, f)
+        if os.path.isdir(full):
+            files.extend(get_files_from_path(full))  # recurse
+        if len(files) > 64:
+            break  # break if we have enough
+        add_valid_file(full, files)
+    return files
+
+
+def add_valid_file(path, files):
+    patterns = ["*.ogg", "*.wav", "*.flac"]
+    if any(fnmatch(path, pattern) for pattern in patterns):
+        files.append(path)
+
+
+def main():
+    if len(sys.argv) == 1:
+        print("Usage: command <filename>")
+        sys.exit(1)
+
+    args = sys.argv.copy()
+    args.pop(0)  # Take off the program name
+
+    if args[0] == "-a":
+        files = get_files_from_path("sounds")
+        widest = max(len(f) for f in files)
+        for filename in files:
+            print(filename.ljust(widest + 2), end="")
+            loudness = get_loudness(filename)
+            print(loudness)
+    elif args[0] == "-n":
+        files = get_files_from_path("sounds")
+        widest = max(len(f) for f in files)
+        for filename in files:
+            print(filename.ljust(widest + 2), end="")
+            loudness = normalize(filename)
+            print(loudness)
+    else:
+        print(get_loudness(args[0]))
+
+
+if __name__ == "__main__":
+    main()

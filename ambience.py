@@ -135,7 +135,8 @@ class AmbientSounds:
         )
 
     def tick(self) -> None:
-        self.handle_play()
+        if not self.paused:
+            self.handle_play()
         if sys.stdout.isatty() and not self.quiet:
             self.print_current_sound()
 
@@ -162,10 +163,6 @@ class AmbientSounds:
             elapsed_str = time.strftime("%H:%M:%S", time.gmtime(elapsed))
         else:
             elapsed_str = time.strftime("%M:%S", time.gmtime(elapsed))
-        summary = ""
-        for i in range(pygame.mixer.get_num_channels()):
-            vol = pygame.mixer.Channel(i).get_volume()
-            summary = "{} {}:{}".format(summary, i, vol)
 
         print(
             "\r\033[K▶ Playing {} {} {} {}".format(
@@ -343,14 +340,26 @@ class AmbientSounds:
 
         if not self.quiet:
             print("Sounds:")
+            file_list = []
             for index, file in enumerate(files):
                 # Clean up common ancestors in sound file paths
                 for path in self.paths:
                     if path in file:
                         listed_sound = file.replace(path + os.sep, "")
-                print("{}. {}".format(index + 1, listed_sound))
+                file_list.append("{}. {}".format(index + 1, listed_sound))
+            self.print_file_list(file_list)
 
         return files
+
+    def print_file_list(self, files) -> None:
+        if len(files) > 20:
+            widest = max(len(f) for f in files)
+            template = "{:<X}{:<X}{:<}".replace("X", str(widest + 3))
+            for a, b, c in zip(files[::3], files[1::3], files[2::3]):
+                print(template.format(a, b, c))
+        else:
+            for file in files:
+                print(file)
 
     def initialize_sounds(self) -> None:
         if not self.quiet:

@@ -14,8 +14,8 @@ import argparse
 import fcntl
 from fnmatch import fnmatch
 import hashlib
+import json
 import os
-import pygame
 import random
 import sys
 import termios
@@ -23,6 +23,7 @@ import time
 import tty
 from typing import Dict, List, Tuple
 
+import pygame
 from pygame.locals import (
     K_LEFTBRACKET,
     K_m,
@@ -35,6 +36,7 @@ from pygame.locals import (
 )
 
 AMBIENT_TICK = USEREVENT + 1
+SOUND_LIBRARY = "ambience-library.json"
 
 
 class AmbientSounds:
@@ -63,11 +65,10 @@ class AmbientSounds:
     animate_position = 0
 
     # Path and sound files
-    package_path = os.path.dirname(os.path.realpath(__file__))
-    paths = [os.path.join(package_path, "sounds")]
+    paths: List[str] = []
     files: List[str] = []
 
-    # Whether to listen to stdin in cli (experimental
+    # Whether to listen to stdin in cli (experimental)
     noinput = False
 
     # Whether to silence output
@@ -83,6 +84,9 @@ class AmbientSounds:
     ):
         if paths:
             self.paths = paths
+        else:
+            self.paths = self.determine_default_sounds_dir()
+
         self.noinput = bool(noinput)
         self.quiet = bool(quiet)
 
@@ -107,9 +111,26 @@ class AmbientSounds:
     def get_version(cls) -> str:
         return "Ambient version {}".format(cls.version)
 
+    def determine_default_sounds_dir(self):
+        # Use the default path in the ~/.ambience dir
+        path = os.path.join(Library.get_home_path(".ambience"), "sounds")
+
+        if not os.path.isdir(path):
+            # Try the path where the package is
+            package_path = os.path.dirname(os.path.realpath(__file__))
+            path = os.path.join(package_path, "sounds")
+            print()
+            print("-" * 60)
+            print("This package only comes with a few sounds to start.")
+            print("Use ambience --fetch-library to download the full sound library.")
+            print("-" * 60)
+
+        return [path]
+
     def start(self) -> None:
         if len(self.files) == 0:
             print("No sound files to load!")
+            print("Use ambience --fetch-library to download sound library.")
             pygame.quit()
             sys.exit(1)
 
@@ -282,7 +303,18 @@ class AmbientSounds:
             except pygame.error as e:
                 # Remove this file so we skip trying to play it
                 del self.files[file_index]
-                print("\nERROR {} -- skipping sound.".format(str(e)))
+                print(
+                    "\nERROR {} -- skipping sound '{}'.".format(
+                        str(e), self.files[file_index]
+                    )
+                )
+
+    def get_sound_id(self, file_index):
+        try:
+            _ = self.files[file_index]
+        except IndexError:
+            print("Error: cannot reference sound {}".format(file_index))
+        return hashlib.md5(str(file_index).encode("utf-8")).hexdigest()[:6]
 
     def get_files(self, paths) -> List[str]:
         files = []
@@ -298,24 +330,18 @@ class AmbientSounds:
 
         if len(files) == 0:
             print("No sound files to load!")
+            print("Use ambience --fetch-library to download sound library.")
             sys.exit(1)
 
         return files
 
-    def get_sound_id(self, file_index):
-        try:
-            _ = self.files[file_index]
-        except IndexError:
-            print("Error: cannot reference sound {}".format(file_index))
-        return hashlib.md5(str(file_index).encode("utf-8")).hexdigest()[:6]
-
-    def get_files_from_path(self, path) -> List[str]:
+    def get_files_from_path(self, path, max_files=64) -> List[str]:
         files = []
         for f in os.listdir(path):
             full = os.path.join(path, f)
             if os.path.isdir(full):
                 files.extend(self.get_files_from_path(full))  # recurse
-            if len(files) > 64:
+            if len(files) > max_files:
                 break  # break if we have enough
             self.add_valid_file(full, files)
         return files
@@ -457,6 +483,126 @@ class StdinReader:
             fcntl.fcntl(self.fd, fcntl.F_SETFL, self.orig_fl)
 
 
+class Library:
+    """Handles the sound library functions"""
+
+    package_path = os.path.dirname(os.path.realpath(__file__))
+
+    def __init__(self):
+        """Initialize this class"""
+
+        # The library path is where the sound files live
+        self.library_dir = self.get_home_path(".ambience")
+        if not os.path.isdir(self.library_dir):
+            os.mkdir(self.library_dir)
+
+        # The library file is the definition of the sound files in the official package
+        # Each entry in the file has a filename and an md5 hash
+        self.library_file = "{}/{}".format(self.package_path, SOUND_LIBRARY)
+
+    def verify_library(self, verify_only=False):
+        """Verify the location of sounds on disk matches expected library manifest"""
+
+        print("Verifying sound library ", end="")
+
+        self.missing = []
+        self.needs_update = []
+        self.cannot_validate = []
+
+        with open(self.library_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for entry in data:
+            self.verify_sound_entry(entry)
+        print("")
+
+        if len(self.missing) > 0:
+            print("Missing {} file(s).".format(len(self.missing)))
+
+        if len(self.needs_update) > 0:
+            print("Files needing updates: {}".format(len(self.needs_update)))
+
+        if not verify_only:
+            self.fetch_files(self.missing)
+            self.fetch_files(self.needs_update, "needing update")
+
+    def verify_sound_entry(self, entry):
+        """Verify a single sound entry from library manifest file"""
+
+        if not entry.get("filename"):
+            return None
+        lib_filename = "{}/{}".format(self.library_dir, entry.get("filename"))
+        if os.path.isfile(lib_filename):
+            if entry.get("hash"):
+                md5_hash = self.hash_file(lib_filename)
+                if md5_hash == entry.get("hash"):
+                    print(".", end="")
+                else:
+                    print("-", end="")
+                    self.needs_update.append(entry.get("filename"))
+            else:
+                print("~", end="")
+                self.cannot_validate.append(entry.get("filename"))
+        else:
+            print("M", end="")
+            self.missing.append(entry.get("filename"))
+
+        return True
+
+    def hash_file(self, filename_):
+        with open(filename_, "rb") as f_:
+            content = f_.read()
+            md5_hash = hashlib.md5(content)
+
+        return md5_hash.hexdigest()
+
+    def fetch_files(self, file_list, type_="missing"):
+        if len(file_list) == 0:
+            return 0
+
+        import requests  # pylint: disable=import-outside-toplevel
+
+        print("Fetching {} {} file(s).".format(len(file_list), type_))
+        for filename in file_list:
+            print(" >> {} ".format(filename), end="", flush=True)
+            url = "https://github.com/sumpygump/ambient/raw/master/{}".format(filename)
+            response = requests.get(url, timeout=60)
+            print(response.status_code, end="")
+
+            if response.status_code == 200:
+                lib_filename = "{}/{}".format(self.library_dir, filename)
+                print(" ->", lib_filename, end="")
+                self.ensure_path(lib_filename)
+                with open(lib_filename, "wb") as f:
+                    f.write(response.content)
+
+            print("", flush=True)
+            time.sleep(0.08)  # Just to make sure we don't blow up Github with requests
+
+    @classmethod
+    def get_home_path(cls, path=""):
+        """Get the home path for this user from the OS"""
+
+        home = os.getenv("HOME")
+        if home is None:
+            home = os.getenv("USERPROFILE")
+
+        if path:
+            return "/".join((home, path))
+        return home
+
+    def ensure_path(self, path=""):
+        """Ensure a path to the file exists (directories it belongs in)"""
+        path = path.replace(self.library_dir, "").rstrip("/")
+
+        segments = path.split("/")
+        path_iteration = self.library_dir
+        for segment in segments[:-1]:  # All but the last
+            path_iteration = "/".join((path_iteration, segment))
+            if not os.path.isdir(path_iteration):
+                os.mkdir(path_iteration)
+
+
 def main():
     # Handle command line arguments
     parser = argparse.ArgumentParser()
@@ -465,6 +611,12 @@ def main():
         "--duration",
         default=5,
         help="set the duration in minutes each sound will play: default=5",
+    )
+    parser.add_argument(
+        "-f",
+        "--fetch-library",
+        action="store_true",
+        help="fetch the sound library from internet",
     )
     parser.add_argument(
         "-i",
@@ -490,6 +642,12 @@ def main():
     # Display version and exit
     if args.version:
         print(AmbientSounds.get_version())
+        sys.exit(0)
+
+    # Fetch/verify sound library
+    if args.fetch_library:
+        library = Library()
+        library.verify_library()
         sys.exit(0)
 
     # Determine paths to sounds

@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Utility tool to generate sound library"""
+
+from fnmatch import fnmatch
+import hashlib
+import json
+import os
+
+OUTPUT_FILE = "ambience-library.json"
+
+
+def get_files_from_path(path):
+    files = []
+    for f in os.listdir(path):
+        full = os.path.join(path, f)
+        if os.path.isdir(full):
+            files.extend(get_files_from_path(full))  # recurse
+        add_valid_file(full, files)
+    return files
+
+
+def add_valid_file(path, files):
+    patterns = ["*.ogg", "*.wav", "*.flac"]
+    if any(fnmatch(path, pattern) for pattern in patterns):
+        files.append(path)
+
+
+def hash_file(filename_):
+    with open(filename_, "rb") as f_:
+        content = f_.read()
+        md5_hash = hashlib.md5(content)
+
+    return md5_hash.hexdigest()
+
+
+def main():
+    print("Gathering sound files from path 'sounds'... ", end="")
+    files = get_files_from_path("sounds")
+    files.sort()
+    print("done. {} files".format(len(files)))
+
+    data = []
+    for filename in files:
+        entry = {"filename": filename, "hash": hash_file(filename)}
+        data.append(entry)
+
+    print("Writing to file '{}'... ".format(OUTPUT_FILE), end="")
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+    print("done.")
+
+
+if __name__ == "__main__":
+    main()

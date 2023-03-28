@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Make sure the library definition file is up to date with the latest sound
+# files committed. Run `bin/generate_library` to generate the file.
+
 # This is for making a new build on pypi
 # See this guide for details: https://packaging.python.org/en/latest/tutorials/packaging-projects/
 #
@@ -52,8 +55,24 @@ echo
 info "Deleting dist directory"
 rm -rf dist
 
+# Only include a few sounds in the packaged version
+rm -rf /tmp/ambience-sounds
+mv sounds /tmp/ambience-sounds
+mkdir -p sounds/drone
+cp /tmp/ambience-sounds/drone/binaural-low-complex.ogg sounds/drone
+mkdir -p sounds/machine-planet
+cp /tmp/ambience-sounds/machine-planet/serenity.ogg sounds/machine-planet
+mkdir -p sounds/nature
+cp /tmp/ambience-sounds/nature/amazon-rainforest.ogg sounds/nature
+mkdir -p sounds/town
+cp /tmp/ambience-sounds/town/train.ogg sounds/town
+
 info "Running build command"
 python -m build
+
+# Move the sounds dir back
+rm -rf sounds
+mv /tmp/ambience-sounds sounds
 
 tree dist
 

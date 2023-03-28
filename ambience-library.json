@@ -1,0 +1,210 @@
+[
+    {
+        "filename": "sounds/drone/b17-bomber.ogg",
+        "hash": "b21791196b4ba0578e5b61bbf28c3c41"
+    },
+    {
+        "filename": "sounds/drone/b25-bomber.ogg",
+        "hash": "fda47f110b8deb23f2f2549a00f1d827"
+    },
+    {
+        "filename": "sounds/drone/binaural-low-complex.ogg",
+        "hash": "f58b8a8474bdf1d3a52d90d2c49f304e"
+    },
+    {
+        "filename": "sounds/drone/fan.ogg",
+        "hash": "a9bb8ae1622b02e77fb919e487021d71"
+    },
+    {
+        "filename": "sounds/drone/machine-factory.ogg",
+        "hash": "d7297bcd6ca117150936a73420dc644a"
+    },
+    {
+        "filename": "sounds/drone/mars-ingenuity.ogg",
+        "hash": "ffbccf722ea6c2fb9f7debd31bc92831"
+    },
+    {
+        "filename": "sounds/drone/mars-perseverance.ogg",
+        "hash": "181f92119d392a097eb08f0d8df42cef"
+    },
+    {
+        "filename": "sounds/drone/warp-core-hum.ogg",
+        "hash": "adf6105f224b8f1c70e29f17421f5ac5"
+    },
+    {
+        "filename": "sounds/machine-planet/airway.ogg",
+        "hash": "dea77bd5794fc0391ce83b03cb5ee687"
+    },
+    {
+        "filename": "sounds/machine-planet/chromatic.ogg",
+        "hash": "a365fb64fa3806b80d9cc22814b10b1f"
+    },
+    {
+        "filename": "sounds/machine-planet/coldsleep.ogg",
+        "hash": "1847bbaaf5195c04f3ef2350bd887e8b"
+    },
+    {
+        "filename": "sounds/machine-planet/engine-room-seven.ogg",
+        "hash": "c37feedc3fc180a92e31bbb6e01038fa"
+    },
+    {
+        "filename": "sounds/machine-planet/exosphere.ogg",
+        "hash": "6d316f01d34dbd253c1f1ff8fb7eab89"
+    },
+    {
+        "filename": "sounds/machine-planet/lucid-dream.ogg",
+        "hash": "831ee949e265e8a6b855f747ec56d93f"
+    },
+    {
+        "filename": "sounds/machine-planet/magma-chamber.ogg",
+        "hash": "2023b8b5cd1faf0818ff7e9188b74769"
+    },
+    {
+        "filename": "sounds/machine-planet/phase-shift.ogg",
+        "hash": "89b1cce79e6c4544f9cf1dc40985cbdf"
+    },
+    {
+        "filename": "sounds/machine-planet/serenity.ogg",
+        "hash": "7480ce2e990ba600b15ab6996d361e8e"
+    },
+    {
+        "filename": "sounds/machine-planet/subterranean.ogg",
+        "hash": "a15c78c69f3066ded195c29c6c9d092d"
+    },
+    {
+        "filename": "sounds/machine-planet/understructure.ogg",
+        "hash": "1a8a3502d0742c5ac6ffeec8de82fb80"
+    },
+    {
+        "filename": "sounds/machine-planet/voltaic.ogg",
+        "hash": "3cc04d964a11b9272b9e7dd4399f5373"
+    },
+    {
+        "filename": "sounds/melodic/alien-contact.ogg",
+        "hash": "fc254f32f343698840c8527baf0afc92"
+    },
+    {
+        "filename": "sounds/melodic/ambient-wave-17.ogg",
+        "hash": "479a175444c53693b142e8dff7e4e72d"
+    },
+    {
+        "filename": "sounds/melodic/ambienttraut.ogg",
+        "hash": "145df9cc2bb3b8fc6723901d36619be5"
+    },
+    {
+        "filename": "sounds/melodic/didgeridu-monk.ogg",
+        "hash": "f985884f95886534296a244348509e03"
+    },
+    {
+        "filename": "sounds/melodic/elementary-wave-11.ogg",
+        "hash": "35d4ab16588135281c963c7e367e5f70"
+    },
+    {
+        "filename": "sounds/melodic/long-hallway.ogg",
+        "hash": "0e810bc0d9a564818c7a34ff10117a2f"
+    },
+    {
+        "filename": "sounds/melodic/lux-aeterna-excerpt.ogg",
+        "hash": "d12caf8c46fa16696e14cfd292c16aaf"
+    },
+    {
+        "filename": "sounds/melodic/resonance-of-the-gods.ogg",
+        "hash": "0330804b4e022b8f02f17fab71de6246"
+    },
+    {
+        "filename": "sounds/melodic/space-music.ogg",
+        "hash": "1ca23c326762974e7169ab528da542e5"
+    },
+    {
+        "filename": "sounds/melodic/the-pilgrim.ogg",
+        "hash": "181f53f5e3a9cb14a523cf43bd0de3d9"
+    },
+    {
+        "filename": "sounds/nature/amazon-rainforest.ogg",
+        "hash": "0a28fc83275c6e906b5be138cf330b9c"
+    },
+    {
+        "filename": "sounds/nature/cave.ogg",
+        "hash": "8c6e7bbc2ee5626ba8ab74dd8d473f28"
+    },
+    {
+        "filename": "sounds/nature/forest.ogg",
+        "hash": "e992bf346e61db30b124bb711c8a69dc"
+    },
+    {
+        "filename": "sounds/nature/japanese-garden.ogg",
+        "hash": "f2a7d42a67605254b59fe784048295b5"
+    },
+    {
+        "filename": "sounds/nature/leaves.ogg",
+        "hash": "868b6c49f1e10e9571f86ec1d7067c2d"
+    },
+    {
+        "filename": "sounds/nature/night-sounds.ogg",
+        "hash": "481c79b6b09fea258fd57f660cf2d86b"
+    },
+    {
+        "filename": "sounds/nature/ocean-waves.ogg",
+        "hash": "678a614188b92866690abbcce8e7ad52"
+    },
+    {
+        "filename": "sounds/nature/perfect-storm.ogg",
+        "hash": "32e912477e2d8fdced72b9c69f09c0ba"
+    },
+    {
+        "filename": "sounds/nature/seaside.ogg",
+        "hash": "760098582c71abc72d8e52eb8767fced"
+    },
+    {
+        "filename": "sounds/nature/spring-birds.ogg",
+        "hash": "7ea2acde97ca9f87901ec1a58d189a0d"
+    },
+    {
+        "filename": "sounds/nature/wind.ogg",
+        "hash": "635924b389b491c1122dc4b422d6bb6f"
+    },
+    {
+        "filename": "sounds/town/bonfire.ogg",
+        "hash": "2bc7006289b808a73b7699e3cd8dc6db"
+    },
+    {
+        "filename": "sounds/town/coffee-shop.ogg",
+        "hash": "7831bc0a5b646a5e913a03fd5aae24e4"
+    },
+    {
+        "filename": "sounds/town/crackling-fireplace.ogg",
+        "hash": "215fd6000e6800cad3b38acf9156406d"
+    },
+    {
+        "filename": "sounds/town/helicopter-mix.ogg",
+        "hash": "99fb95b43f2eaeadfea9fc3752195e39"
+    },
+    {
+        "filename": "sounds/town/highway.ogg",
+        "hash": "f7a144a456c8da35cf5c2399259859ff"
+    },
+    {
+        "filename": "sounds/town/library.ogg",
+        "hash": "1fadba3a92a2dda45897174ac7d1a4c9"
+    },
+    {
+        "filename": "sounds/town/metro-outdoors.ogg",
+        "hash": "c55120c903d1ec363618038af9cd005c"
+    },
+    {
+        "filename": "sounds/town/metro.ogg",
+        "hash": "3b820a38bfea3b2a12f414613ea13a3c"
+    },
+    {
+        "filename": "sounds/town/rural-spain.ogg",
+        "hash": "dcd4fc35206215ea56ab2a09a9cbc21a"
+    },
+    {
+        "filename": "sounds/town/train-station.ogg",
+        "hash": "4c0468795a3183b5f239f9463b8405ba"
+    },
+    {
+        "filename": "sounds/town/train.ogg",
+        "hash": "618b8d0ad652bba957fd6b1c4706a585"
+    }
+]

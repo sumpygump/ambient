@@ -13,6 +13,8 @@ supported types by using the `--path` parameter when invoking.
 
 ```
 pip install ambience
+
+ambience --fetch-library
 ```
 
 ## Manual Installation
@@ -48,18 +50,22 @@ sudo python3 setup.py install
 To run with the default settings, simply run `ambience`. Use "ctrl-c" to stop.
 
 ```
-usage: ambience [-h] [-v] [-p PATH] [-d DURATION] [-n] [paths [paths ...]]
+Hello from the pygame community. https://www.pygame.org/contribute.html
+usage: ambience [-h] [-d DURATION] [-f] [-i] [-n] [-p PATH] [-q] [-v] [paths ...]
 
 positional arguments:
   paths                 load given sound file(s) or path(s)
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  -v, --version         show version and exit
-  -p PATH, --path PATH  set the path where the sound files are
   -d DURATION, --duration DURATION
                         set the duration in minutes each sound will play: default=5
+  -f, --fetch-library   fetch the sound library from internet
+  -i, --noinit          do not pre-initialize all sounds at start
   -n, --noinput         disable the stdin input capture
+  -p PATH, --path PATH  set the path where the sound files are
+  -q, --quiet           produce no output
+  -v, --version         show version and exit
 ```
 
 If invoked without the `-n` parameter, press 'n' to skip to next sound and 'q'

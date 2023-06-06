@@ -80,7 +80,13 @@ class AmbientSounds:
     paused = False
 
     def __init__(
-        self, paths=None, duration=5, noinput=False, quiet=False, initialize_sounds=True
+        self,
+        paths=None,
+        duration=5,
+        noinput=False,
+        quiet=False,
+        initialize_sounds=True,
+        initial_volume=100.0,
     ):
         if paths:
             self.paths = paths
@@ -100,6 +106,9 @@ class AmbientSounds:
 
         if not self.quiet:
             print(self.get_version())
+
+        if initial_volume:
+            self.volume = min(float(initial_volume) / 100.0, 1.0)
 
         self.files = self.load_sound_files()
         if initialize_sounds:
@@ -150,6 +159,7 @@ class AmbientSounds:
         self.load_sound(self.current_sound)
 
         # Start first sound
+        self.sounds[self.get_sound_id(self.current_sound)].set_volume(self.volume)
         self.sounds[self.get_sound_id(self.current_sound)].play(-1, fade_ms=3000)
         self.play_timer = int(
             self.play_duration - (self.fade_duration / 2) - (3 * self.fps)
@@ -632,6 +642,9 @@ def main():
     )
     parser.add_argument("-q", "--quiet", action="store_true", help="produce no output")
     parser.add_argument(
+        "-V", "--volume", default=100.0, help="set initial volume (0-100)"
+    )
+    parser.add_argument(
         "-v", "--version", action="store_true", help="show version and exit"
     )
     parser.add_argument("paths", nargs="*", help="load given sound file(s) or path(s)")
@@ -668,6 +681,7 @@ def main():
         noinput=args.noinput,
         quiet=args.quiet,
         initialize_sounds=args.noinit,
+        initial_volume=args.volume,
     )
     ambience.start()
 

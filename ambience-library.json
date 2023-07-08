@@ -16,6 +16,10 @@
         "hash": "a9bb8ae1622b02e77fb919e487021d71"
     },
     {
+        "filename": "sounds/drone/light-year.ogg",
+        "hash": "9c27255cc2f717de64810635cf1067f7"
+    },
+    {
         "filename": "sounds/drone/machine-factory.ogg",
         "hash": "d7297bcd6ca117150936a73420dc644a"
     },
@@ -30,6 +34,42 @@
     {
         "filename": "sounds/drone/warp-core-hum.ogg",
         "hash": "adf6105f224b8f1c70e29f17421f5ac5"
+    },
+    {
+        "filename": "sounds/extra/brave-world.ogg",
+        "hash": "d06eef607d14747222d7fb0697554ff8"
+    },
+    {
+        "filename": "sounds/extra/call-of-the-andes.ogg",
+        "hash": "f97de2283a379c05fc0b783503b07d86"
+    },
+    {
+        "filename": "sounds/extra/collide.ogg",
+        "hash": "4ae3b540c1c0ac6b2663311b02e9b3b1"
+    },
+    {
+        "filename": "sounds/extra/dunes-of-arrakis.ogg",
+        "hash": "9904906b4424c8a02ba03e36af9099c8"
+    },
+    {
+        "filename": "sounds/extra/moonlight-knight-outro.ogg",
+        "hash": "ac885c7dca1f4b11aa3e52310519d04d"
+    },
+    {
+        "filename": "sounds/extra/oblivion.ogg",
+        "hash": "48b8432019126d31afe95b47ce8123a3"
+    },
+    {
+        "filename": "sounds/extra/procession-excerpt.ogg",
+        "hash": "79644a09d55c500ad8251239db9b9a0f"
+    },
+    {
+        "filename": "sounds/extra/quantum-polarity.ogg",
+        "hash": "bfdec2dc9548648c277e4768d0ee4ece"
+    },
+    {
+        "filename": "sounds/extra/sleeping-dragon.ogg",
+        "hash": "3b94bdc77dcbaaf9bb07e71527d0c909"
     },
     {
         "filename": "sounds/machine-planet/airway.ogg",

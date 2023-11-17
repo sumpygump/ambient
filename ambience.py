@@ -10,10 +10,14 @@
 #                                                     #
 # ----------------------------------------------------#
 
+# pylint: disable=wrong-import-position
+
 import argparse
+from contextlib import redirect_stdout, redirect_stderr
 import fcntl
 from fnmatch import fnmatch
 import hashlib
+from io import StringIO
 import json
 import os
 import random
@@ -23,17 +27,18 @@ import time
 import tty
 from typing import Dict, List, Tuple
 
-import pygame
-from pygame.locals import (
-    K_LEFTBRACKET,
-    K_m,
-    K_n,
-    K_p,
-    K_q,
-    K_s,
-    K_RIGHTBRACKET,
-    USEREVENT,
-)
+with redirect_stdout(StringIO()):
+    import pygame
+    from pygame.locals import (
+        K_LEFTBRACKET,
+        K_m,
+        K_n,
+        K_p,
+        K_q,
+        K_s,
+        K_RIGHTBRACKET,
+        USEREVENT,
+    )
 
 AMBIENT_TICK = USEREVENT + 1
 SOUND_LIBRARY = "ambience-library.json"
@@ -146,12 +151,11 @@ class AmbientSounds:
         if not self.quiet:
             print("\r\nPlaying sounds. Press Ctrl-C to exit.", flush=True)
         if not self.noinput and not self.quiet:
-            print("Press '[' and ']' to change volume and press 'm' to mute.")
-            print(
-                "Press 'n' to go to next sound, "
-                "or 'p' to go to previous sound. Press 's' to pause and 'q' to quit.",
-                flush=True,
-            )
+            print("Keys:")
+            print("┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐")
+            print("│ n │ │ p │ │ [ │ │ ] │ │ m │ │ s │ │ q │")
+            print("└───┘ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘")
+            print(" next  prev [vol up/dn]  mute pause  quit", flush=True)
         if sys.stdout.isatty():
             print("\033[?25l")  # Hide cursor
 

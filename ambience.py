@@ -13,7 +13,7 @@
 # pylint: disable=wrong-import-position
 
 import argparse
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stdout
 import fcntl
 from fnmatch import fnmatch
 import hashlib

@@ -62,7 +62,7 @@ def get_files_from_path(path):
         if len(files) > 64:
             break  # break if we have enough
         add_valid_file(full, files)
-    return files
+    return sorted(files)
 
 
 def add_valid_file(path, files):
@@ -79,19 +79,28 @@ def main():
     args = sys.argv.copy()
     args.pop(0)  # Take off the program name
 
-    if args[0] == "-a":
-        files = get_files_from_path("sounds")
+    if args[0] in ("-h", "--help"):
+        print("Usage: bin/loudness <filename> Get loudness of file")
+        print("       bin/loudness -a <path> Get loudness of all files in path")
+        print("       bin/loudness -n <path> Normalize all files in path")
+        sys.exit(0)
+
+    if args[0] in ("-a", "-n"):
+        action = "view" if args[0] == "-a" else "normalize"
+
+        if len(args) == 1:
+            print("Error: Missing path")
+            sys.exit(1)
+
+        path = args[1]
+        files = get_files_from_path(path)
         widest = max(len(f) for f in files)
         for filename in files:
             print(filename.ljust(widest + 2), end="")
-            loudness = get_loudness(filename)
-            print(loudness)
-    elif args[0] == "-n":
-        files = get_files_from_path("sounds")
-        widest = max(len(f) for f in files)
-        for filename in files:
-            print(filename.ljust(widest + 2), end="")
-            loudness = normalize(filename)
+            if action == "normalize":
+                loudness = normalize(filename)
+            else:
+                loudness = get_loudness(filename)
             print(loudness)
     else:
         print(get_loudness(args[0]))

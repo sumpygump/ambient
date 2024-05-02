@@ -31,6 +31,10 @@ with redirect_stdout(StringIO()):
     import pygame
     from pygame.locals import (
         K_LEFTBRACKET,
+        K_1,
+        K_5,
+        K_0,
+        K_i,
         K_m,
         K_n,
         K_p,
@@ -291,8 +295,7 @@ class AmbientSounds:
         self.set_volume(self.volume)
 
     def set_volume(self, level) -> None:
-        for i in range(pygame.mixer.get_num_channels()):
-            pygame.mixer.Channel(i).set_volume(level)
+        self.sounds[self.get_sound_id(self.current_sound)].set_volume(level)
 
     def mute(self) -> None:
         self.muted = not self.muted
@@ -307,6 +310,22 @@ class AmbientSounds:
             pygame.mixer.pause()
         else:
             pygame.mixer.unpause()
+
+    def info(self) -> None:
+        print("\nINFO")
+        for i in range(pygame.mixer.get_num_channels()):
+            print(
+                "Channel",
+                i,
+                pygame.mixer.Channel(i).get_volume(),
+                pygame.mixer.Channel(i).get_sound(),
+            )
+
+        # for i, f in enumerate(self.files):
+        #     sid = self.get_sound_id(i)
+        #     sound = self.sounds.get(sid)
+        #     if sound:
+        #         print(i, f, sid, sound, sound.get_volume())
 
     def load_sound(self, file_index) -> None:
         if self.get_sound_id(file_index) not in self.sounds:
@@ -451,6 +470,17 @@ class AmbientSounds:
             self.mute()
         elif key_code == K_s:
             self.pause()
+        elif key_code == K_1:
+            self.volume = 0.1
+            self.set_volume(self.volume)
+        elif key_code == K_5:
+            self.volume = 0.5
+            self.set_volume(self.volume)
+        elif key_code == K_0:
+            self.volume = 1.0
+            self.set_volume(self.volume)
+        elif key_code == K_i:
+            self.info()
 
     def the_end(self) -> None:
         try:

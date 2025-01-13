@@ -368,7 +368,7 @@ class AmbientSounds:
 
         return files
 
-    def get_files_from_path(self, path, max_files=64) -> List[str]:
+    def get_files_from_path(self, path, max_files=200) -> List[str]:
         files = []
         for f in os.listdir(path):
             full = os.path.join(path, f)

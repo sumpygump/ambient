@@ -369,6 +369,7 @@ class AmbientSounds:
         return files
 
     def get_files_from_path(self, path, max_files=200) -> List[str]:
+
         files = []
         for f in os.listdir(path):
             full = os.path.join(path, f)
@@ -377,7 +378,7 @@ class AmbientSounds:
             if len(files) > max_files:
                 break  # break if we have enough
             self.add_valid_file(full, files)
-        return files
+        return sorted(files)
 
     def add_valid_file(self, path, files) -> None:
         patterns = ["*.ogg", "*.wav", "*.flac"]
@@ -411,9 +412,18 @@ class AmbientSounds:
         return files
 
     def print_file_list(self, files) -> None:
+        """Print the list of files to be used"""
+
+        # If there are more than 20 items in list, do in 3-column layout
         if len(files) > 20:
             widest = max(len(f) for f in files)
             template = "{:<X}{:<X}{:<}".replace("X", str(widest + 3))
+
+            # Add remaining placeholders to ensure list is exactly a multiple of 3
+            remainder = len(files) % 3
+            if remainder > 0:
+                files.extend(["" for x in range(3 - remainder)])
+
             for a, b, c in zip(files[::3], files[1::3], files[2::3]):
                 print(template.format(a, b, c))
         else:

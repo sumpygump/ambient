@@ -116,3 +116,8 @@ Credit goes to the following for the sound files included in this package:
 - Gladkiy for [`metro-outdoors.ogg`](https://freesound.org/people/gladkiy/sounds/333361/)
 - Zabuhailo for [`metro.ogg`](https://freesound.org/people/Zabuhailo/sounds/193742/)
 - jjeronen@norssi.oulu.fi for ambient-works-iv.ogg (from Ultimate Mod Collection)
+- alphagem-o for `birth-of-a-snowflake.ogg`
+- amfivolia for `biota-alien-soundscape.ogg`
+- moodist.mvze.net for `inside-a-train.ogg`
+- moodist.mvze.net for `underwater.ogg`
+- ambientnoise.online for `womb.ogg`

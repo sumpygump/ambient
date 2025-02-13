@@ -10,33 +10,39 @@ from pydub import AudioSegment
 import pyloudnorm
 import soundfile
 
+# Using a filter class that has adequate reduction in the low end
+FILTER_CLASS = "Fenton/Lee 1"
+
 
 def get_loudness(input_filename):
     # load audio (with shape (samples, channels))
     data, rate = soundfile.read(input_filename)
 
     print(rate, end=" ")
-    meter = pyloudnorm.Meter(rate)  # create BS.1770 meter
+    meter = pyloudnorm.Meter(rate, filter_class=FILTER_CLASS)
     loudness = meter.integrated_loudness(data)  # measure loudness
 
     return loudness
 
 
-def normalize(input_filename, target_lufs=-20.0):
+def normalize(input_filename, target_lufs=-24.0):
     data, rate = soundfile.read(input_filename)  # load audio
     print("Rate:", rate, end=" ")
 
     # measure the loudness first
-    meter = pyloudnorm.Meter(rate)  # create BS.1770 meter
+    meter = pyloudnorm.Meter(rate, filter_class=FILTER_CLASS)
     loudness = meter.integrated_loudness(data)
 
     print(loudness, end=" ")
     print("Processing", end=" ", flush=True)
 
     # Loudness normalize audio to target dB LUFS
-    loudness_normalized_audio = pyloudnorm.normalize.loudness(
-        data, loudness, target_lufs
-    )
+    try:
+        loudness_normalized_audio = pyloudnorm.normalize.loudness(
+            data, loudness, target_lufs
+        )
+    except Exception as e:  # pylint: disable=broad-except
+        print("E:", str(e))
 
     # Write to wav file
     wav_filename = "{}-nrm.wav".format(Path(input_filename).stem)
@@ -55,13 +61,16 @@ def normalize(input_filename, target_lufs=-20.0):
 
 def get_files_from_path(path):
     files = []
-    for f in os.listdir(path):
-        full = os.path.join(path, f)
-        if os.path.isdir(full):
-            files.extend(get_files_from_path(full))  # recurse
-        if len(files) > 64:
-            break  # break if we have enough
-        add_valid_file(full, files)
+    if os.path.isdir(path):
+        for f in os.listdir(path):
+            full = os.path.join(path, f)
+            if os.path.isdir(full):
+                files.extend(get_files_from_path(full))  # recurse
+            if len(files) > 200:
+                break  # break if we have enough
+            add_valid_file(full, files)
+    else:
+        add_valid_file(path, files)
     return sorted(files)
 
 

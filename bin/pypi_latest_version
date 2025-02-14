@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Script to get latest version for a package on pypi.org"""
+
+import requests
+import sys
+
+
+def fetch_package(package_name):
+    """Fetch information about a package from pypi.org"""
+
+    url = f"https://pypi.org/simple/{package_name}/"
+
+    # The accept header is required by pypi to get json output
+    # See https://docs.pypi.org/api/index-api/
+    headers = {
+        "user-agent": "pypi_releases/0.2",
+        "accept": "application/vnd.pypi.simple.v1+json",
+    }
+    response = requests.get(url, headers=headers, timeout=60)
+
+    if response.status_code != requests.codes.ok:
+        print(f"Error: cannot find package {package_name}")
+        return None
+
+    return response.json()
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: bin/pypi_releases <package_name>")
+        sys.exit(1)
+    name = sys.argv[1]
+
+    package = fetch_package(name)
+    if package is None:
+        sys.exit(1)
+
+    # Print the name and the latest version
+    print(package.get("name"), package.get("versions", [])[-1])

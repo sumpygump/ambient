@@ -31,14 +31,13 @@ fi
 
 # build is to build the dist
 # twine is to publish to pypi
-# yolk is for checking the version from the registry
 info "Getting latest dependencies for packaging tools"
-pip install --upgrade build twine yolk3k
+pip install --upgrade build twine requests
 
 echo
 info "Checking latest version of package in pypi..."
 
-current_version=$(yolk -V ambience | awk '{print $2}')
+current_version=$(bin/pypi_latest_version ambience | awk '{print $2}')
 echo CURRENT PUBLISHED VERSION: "$current_version"
 
 attempt_version=$(grep version pyproject.toml | awk '{print $3}' | sed -r 's/"//g')

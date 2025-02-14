@@ -51,7 +51,7 @@ SOUND_LIBRARY = "ambience-library.json"
 class AmbientSounds:
     """AmbientSounds class"""
 
-    version = "1.0.13"
+    version = "1.1.0"
 
     # FPS: Low number is used to reduce CPU;
     # Don't really need pygame's cycle running so frequently

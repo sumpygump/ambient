@@ -76,6 +76,7 @@ class AmbientSounds:
     # Path and sound files
     paths: List[str] = []
     files: List[str] = []
+    max_sounds: 0
 
     # Whether to listen to stdin in cli (experimental)
     noinput = False
@@ -96,6 +97,7 @@ class AmbientSounds:
         quiet=False,
         initialize_sounds=True,
         initial_volume=100.0,
+        max_sounds=0,
     ):
         if paths:
             self.paths = paths
@@ -104,6 +106,7 @@ class AmbientSounds:
 
         self.noinput = bool(noinput)
         self.quiet = bool(quiet)
+        self.max_sounds = max_sounds
 
         # Calculate number of half seconds from minutes
         self.play_duration = float(duration) * (self.fps * 60)
@@ -395,6 +398,9 @@ class AmbientSounds:
         files = self.get_files(self.paths)
         random.shuffle(files)
 
+        if self.max_sounds > 0:
+            files = files[0 : self.max_sounds]
+
         if len(files) == 0:
             return files
 
@@ -673,6 +679,12 @@ def main():
         help="fetch the sound library from internet",
     )
     parser.add_argument(
+        "-m",
+        "--max-sounds",
+        default=0,
+        help="randomly select a subset of loaded sounds. default=0 (no max)",
+    )
+    parser.add_argument(
         "-i",
         "--noinit",
         action="store_false",
@@ -726,6 +738,7 @@ def main():
         quiet=args.quiet,
         initialize_sounds=args.noinit,
         initial_volume=args.volume,
+        max_sounds=int(args.max_sounds),
     )
     ambience.start()
 

@@ -21,6 +21,7 @@ from io import StringIO
 import json
 import os
 import random
+import shutil
 import sys
 import termios
 import time
@@ -51,7 +52,7 @@ SOUND_LIBRARY = "ambience-library.json"
 class AmbientSounds:
     """AmbientSounds class"""
 
-    version = "1.1.0"
+    version = "1.1.1"
 
     # FPS: Low number is used to reduce CPU;
     # Don't really need pygame's cycle running so frequently
@@ -182,10 +183,16 @@ class AmbientSounds:
         if sys.stdout.isatty() and not self.quiet:
             self.print_current_sound()
 
+    def get_terminal_width(self) -> int:
+        width, _ = shutil.get_terminal_size((80, 20))
+        return width
+
     def print_current_sound(self) -> None:
         if self.paused:
             print("\r\033[K⏸ [paused] (Press 's' to unpause)", end="")
             return
+
+        term_width = self.get_terminal_width()
 
         self.animate_position += 1
         if self.animate_position >= len(self.animate_chars):
@@ -206,12 +213,26 @@ class AmbientSounds:
         else:
             elapsed_str = time.strftime("%M:%S", time.gmtime(elapsed))
 
+        required_width = 15 + len(elapsed_str) + len(volume_str)
+        max_sound_width = term_width - required_width
+
         print(
             "\r\033[K▶ Playing {} {} {} {}".format(
-                sound_name, animate_char, volume_str, elapsed_str
+                self.incultrate_string(sound_name, max_sound_width),
+                animate_char,
+                volume_str,
+                elapsed_str,
             ),
             end="",
         )
+
+    def incultrate_string(self, text, max_width) -> str:
+        """Shorten a string by truncating it to a max_width, but in the middle"""
+        if len(text) <= max_width:
+            return text
+
+        size = int((max_width / 2) - 3)
+        return f"{text[0:size]}...{text[-size:]}"
 
     def handle_play(self) -> None:
         if self.play_timer > 0:
@@ -422,15 +443,19 @@ class AmbientSounds:
 
         # If there are more than 20 items in list, do in 3-column layout
         if len(files) > 20:
-            widest = max(len(f) for f in files)
+            max_col_width = int(self.get_terminal_width() / 3) - 2
+            shortened_files = [self.incultrate_string(f, max_col_width) for f in files]
+            widest = max(len(f) for f in shortened_files)
             template = "{:<X}{:<X}{:<}".replace("X", str(widest + 3))
 
             # Add remaining placeholders to ensure list is exactly a multiple of 3
-            remainder = len(files) % 3
+            remainder = len(shortened_files) % 3
             if remainder > 0:
-                files.extend(["" for x in range(3 - remainder)])
+                shortened_files.extend(["" for x in range(3 - remainder)])
 
-            for a, b, c in zip(files[::3], files[1::3], files[2::3]):
+            for a, b, c in zip(
+                shortened_files[::3], shortened_files[1::3], shortened_files[2::3]
+            ):
                 print(template.format(a, b, c))
         else:
             for file in files:

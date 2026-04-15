@@ -1,2 +1,4 @@
 pygame
 requests
+pyloudnorm==0.2.0
+soundfile==0.13.1
